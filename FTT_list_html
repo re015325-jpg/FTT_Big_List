@@ -1,0 +1,165 @@
+<title>FTT Big List</title>
+
+<!-- Performance hints -->
+<link rel="preconnect" href="https://unavatar.io" crossorigin>
+<link rel="preconnect" href="https://www.google.com" crossorigin>
+<link rel="preconnect" href="https://images.weserv.nl" crossorigin>
+<link rel="dns-prefetch" href="//unavatar.io">
+<link rel="dns-prefetch" href="//images.weserv.nl">
+<link rel="dns-prefetch" href="//www.google.com">
+
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: #f4f7fa; color: #222;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    display: flex; flex-direction: column;
+  }
+
+  header { display: grid; gap: 6px; padding: 6px 10px; background: #0078d7; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.10); }
+  header .top { display:flex; gap:12px; align-items:center; }
+  h1 { margin:0; font-size:14px; font-weight:750; line-height:1.1; }
+  .meta { margin-left:auto; font-size:12px; opacity:.95; }
+
+  .button-row { display:flex; flex-wrap:wrap; gap:6px; }
+  .btn { color:#fff; background:#0063b1; border:0; border-radius:8px; padding:.35rem .6rem; font-weight:700; font-size:13px; cursor:pointer; }
+  .btn.us{background:#0078d7}.btn.canada{background:#d83b01}.btn.samerica{background:#107c10}
+  .btn.europe{background:#6b46c1}.btn.eastasia{background:#e81123}.btn.mideast{background:#ffb900;color:#333}
+  .btn.active{outline:2px solid #fff; outline-offset:1px; filter:brightness(1.05)}
+
+  .controls {
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; justify-content:flex-start;
+  }
+  .controls .switch { display:flex; align-items:center; gap:6px; background:#ffffff22; padding:3px 8px; border-radius:8px; }
+  .controls input[type="search"]{
+    padding:6px 8px; border-radius:8px; border:1px solid #c8d7eb; min-width:240px;
+    outline: none;
+  }
+  .controls select, .controls button {
+    font-size:12px; padding:3px 8px; border-radius:6px; border:none;
+  }
+  .controls .btn-plain { background:#ffffff22; color:#fff; }
+
+  main { display:flex; flex-direction:column; }
+  .table-wrap { height: calc(100vh - 142px); overflow:auto; background:#fff; border-top:1px solid #e9eef4; border-bottom:1px solid #e9eef4; }
+
+  /* Table */
+  table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 14px; min-width: 2200px; }
+  tbody td {
+    border-bottom:1px solid #f0f3f6; padding:8px 10px; vertical-align: top;
+    white-space: normal; overflow-wrap: break-word; word-break: normal; hyphens: manual; line-height:1.35;
+    background: #fff;
+  }
+  tbody tr:nth-child(2n){ background:#fafcff; }
+
+  /* Row 1 hidden; Row 2 sticky */
+  tbody tr.is-hidden { display: none; }
+  tbody tr.sticky-second td {
+    position: sticky; top: 0; z-index: 4;
+    background: linear-gradient(#f7fafc, #eef3f9);
+    border-bottom: 2px solid #e0e6ee;
+  }
+
+  /* State header row */
+  tr.state-header > td {
+    background: #000 !important; color:#fff !important;
+    font-weight: 700; letter-spacing: .2px;
+    border-bottom: 2px solid #111;
+    position: sticky; top: 40px; z-index: 3;
+  }
+  tr.state-header .state-bar { display:flex; align-items:center; gap:10px; cursor: pointer; }
+  .chev {
+    width: 0; height: 0;
+    border-left: 6px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transition: transform .15s ease;
+  }
+  .expanded .chev { transform: rotate(90deg); }
+  tr[data-collapsed="true"] { display: none; }
+
+  /* Image column + hiding */
+  .imgCol { width: 160px; }
+  .thumb  { width: 120px; height: 120px; border-radius:10px; border:1px solid #ececec; object-fit:cover; display:block; background:#f1f1f1; }
+  .skeleton { width: 120px; height: 120px; background:#e6e6e6; border-radius:10px; border:1px solid #ececec; }
+  .hide-images col:first-child { width:0 !important; }
+  .hide-images .imgCol { display:none; }
+
+  /* Links */
+  td a { white-space: nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+  .cell-link { color: inherit; text-decoration: underline; }
+  .full-url {
+    display:none; margin-top:6px; font-size:12px; color:#333;
+    word-break: break-all; white-space: normal;
+    background:#f6f8fb; border:1px solid #e5ebf3; border-radius:6px; padding:6px;
+  }
+  .show-full .full-url { display:block; }
+
+  /* Global text clamp + More/Less */
+  .clamp-wrap { display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
+  .clamp-3 { -webkit-line-clamp:3; }
+  .moreless { display:inline-block; margin-top:6px; font-size:12px; color:#0063b1; cursor:pointer; user-select:none; }
+
+  /* Search hide */
+  .search-row-hide { display: none !important; }
+
+  /* Tiny icon cells (Column I) */
+  .sentiment { font-size:18px; line-height:1; }
+</style>
+<header>
+  <div class="top">
+    <h1>FTT Big List</h1>
+    <div class="meta" id="meta">loading…</div>
+  </div>
+
+  <div class="button-row" role="navigation" aria-label="Tabs">
+    <button class="btn us active"      data-gid="0">United States</button>
+    <button class="btn canada"         data-gid="918890863">Canada</button>
+    <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
+    <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
+    <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
+    <button class="btn mideast"        data-gid="1604960979">Middle East</button>
+  </div>
+
+  <div class="controls">
+    <input id="searchBox" type="search" placeholder="Search…" />
+    <button id="clearSearch" class="btn" style="background:#666">Clear</button>
+
+    <label class="switch" title="Toggle row thumbnails">
+      <input id="imgToggle" type="checkbox" />
+      Show images
+    </label>
+
+    <button id="expandAll" class="btn" style="background:#3aa655">Expand all</button>
+    <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
+
+    <span style="margin-left:8px">Sort within state by</span>
+    <select id="sortCol" aria-label="Sort column">
+      <option value="">— None —</option>
+      <option value="A">Location</option>
+      <option value="C">Domme</option>
+      <option value="H">Verified?</option>
+      <option value="I">Experience?</option>
+      <option value="J">Price range?</option>
+    </select>
+    <select id="sortDir" aria-label="Sort direction">
+      <option value="asc">Asc</option>
+      <option value="desc">Desc</option>
+    </select>
+    <button id="applySort" class="btn-plain">Apply</button>
+    <button id="clearSort" class="btn-plain">Clear</button>
+
+    <button id="exportCsv" class="btn" style="background:#0a7ea4">Export CSV (current view)</button>
+    <button id="exportAllCsv" class="btn" style="background:#0a5a7a">Export CSV (all tabs)</button>
+  </div>
+</header>
+
+<main>
+  <div class="table-wrap" id="scrollWrap">
+    <table id="tbl" aria-live="polite">
+      <colgroup id="colg"></colgroup>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>

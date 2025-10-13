@@ -600,7 +600,7 @@
       const row = rows[i];
       if (isOnlyColAText(row)) {
         const name = (row[0]||"").trim() || "Untitled";
-        current = { headerIndex: i, stateName: name, members: [], collapsed: (state[name] !== undefined ? state[name] : true) };
+        current = { headerIndex: i, stateName: name, members: [], collapsed: (state[name] !== undefined ? state[name] : False) };
         groups.push(current);
       } else if (current) {
         current.members.push(i);

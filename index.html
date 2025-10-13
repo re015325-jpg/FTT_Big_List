@@ -26,6 +26,7 @@
     header .top { display:flex; gap:12px; align-items:center; }
     h1 { margin:0; font-size:14px; font-weight:750; line-height:1.1; }
     .meta { margin-left:auto; font-size:12px; opacity:.95; }
+    .meta.error { color: #ffe9e9; }
 
     .button-row { display:flex; flex-wrap:wrap; gap:6px; }
     .btn { color:#fff; background:#0063b1; border:0; border-radius:8px; padding:.35rem .6rem; font-weight:700; font-size:13px; cursor:pointer; }
@@ -111,6 +112,9 @@
 
     /* Tiny icon cells (Column I) */
     .sentiment { font-size:18px; line-height:1; }
+
+    /* Debug helper (optional) */
+    .debug { font-size:11px; opacity:.85; }
   </style>
 </head>
 <body>
@@ -160,6 +164,8 @@
       <button id="exportCsv" class="btn" style="background:#0a7ea4">Export CSV (current view)</button>
       <button id="exportAllCsv" class="btn" style="background:#0a5a7a">Export CSV (all tabs)</button>
     </div>
+
+    <div id="dbg" class="debug" aria-live="polite"></div>
   </header>
 
   <main>
@@ -225,6 +231,7 @@
   const tbody = $("#tbody");
   const colg  = $("#colg");
   const meta  = $("#meta");
+  const dbg   = $("#dbg");
   const imgToggle = $("#imgToggle");
   const expandAllBtn = $("#expandAll");
   const collapseAllBtn = $("#collapseAll");
@@ -286,7 +293,7 @@
   /* CSV helpers */
   function csvEscape(v){
     const s = (v ?? "").toString().replace(/\r?\n/g, " ").trim();
-    return /[",\n]/.test(s) ? \`"\${s.replace(/"/g,'""')}"\` : s;
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
   }
   function downloadCSV(filename, rows){
     const csv = "\uFEFF" + rows.map(r => r.map(csvEscape).join(",")).join("\r\n");
@@ -338,7 +345,7 @@
     if (!/^@[\w.]{1,50}$/i.test(at)) return null;
     const handle = at.slice(1);
     const a = document.createElement("a");
-    a.href = \`https://x.com/\${handle}\`;
+    a.href = `https://x.com/${handle}`;
     a.target = "_blank"; a.rel = "noopener";
     a.textContent = at; a.className = "cell-link";
     return a;
@@ -355,9 +362,9 @@
     const user = parseRedditUsername(raw);
     if (!user) return null;
     const a = document.createElement("a");
-    a.href = \`https://www.reddit.com/user/\${encodeURIComponent(user)}\`;
+    a.href = `https://www.reddit.com/user/${encodeURIComponent(user)}`;
     a.target = "_blank"; a.rel = "noopener";
-    a.textContent = \`u/\${user}\`;
+    a.textContent = `u/${user}`;
     a.className = "cell-link";
     return a;
   }
@@ -365,15 +372,15 @@
   /* Phone helpers */
   function normalizeDigits(str) { return (str || "").replace(/\D+/g, ""); }
   function formatUSPhone(digits) {
-    if (digits.length === 10) return \`(\${digits.slice(0,3)}) \${digits.slice(3,6)}-\${digits.slice(6)}\`;
-    if (digits.length === 11 && digits[0] === '1') return \`+1 (\${digits.slice(1,4)}) \${digits.slice(4,7)}-\${digits.slice(7)}\`;
+    if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    if (digits.length === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
     return digits;
   }
   function buildTelAnchor(raw) {
     const d = normalizeDigits(raw);
     if (!d) return null;
     const a = document.createElement("a");
-    a.href = \`tel:\${d.length===11 && d[0]==='1' ? '+'+d : (d.length===10 ? '+1'+d : d)}\`;
+    a.href = `tel:${d.length===11 && d[0]==='1' ? '+'+d : (d.length===10 ? '+1'+d : d)}`;
     a.target = "_self";
     a.textContent = formatUSPhone(d);
     a.className = "cell-link";
@@ -385,15 +392,15 @@
   function isTwitterDomain(host){
     return /(^|\.)x\.com$/.test(host) || /(^|\.)twitter\.com$/.test(host);
   }
-  function unavatarForDomain(domain) { return domain ? \`https://unavatar.io/\${encodeURIComponent(domain)}?fallback=false\` : ""; }
-  function faviconForDomain(domain) { return domain ? \`https://www.google.com/s2/favicons?domain=\${encodeURIComponent(domain)}&sz=128\` : ""; }
+  function unavatarForDomain(domain) { return domain ? `https://unavatar.io/${encodeURIComponent(domain)}?fallback=false` : ""; }
+  function faviconForDomain(domain) { return domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128` : ""; }
   function unavatarForTwitterHandleStrict(txt) {
     const at = (txt || "").trim();
     if (!/^@[\w.]{1,50}$/i.test(at)) return [];
     const h = at.slice(1);
     return [
-      \`https://unavatar.io/x/\${encodeURIComponent(h)}?fallback=false\`,
-      \`https://unavatar.io/twitter/\${encodeURIComponent(h)}?fallback=false\`
+      `https://unavatar.io/x/${encodeURIComponent(h)}?fallback=false`,
+      `https://unavatar.io/twitter/${encodeURIComponent(h)}?fallback=false`
     ];
   }
   function extractTwitterHandleFromUrlish(txt){
@@ -404,7 +411,7 @@
       if (!isTwitterDomain(u.hostname)) return "";
       const parts = u.pathname.split('/').filter(Boolean);
       const handle = parts[0] || "";
-      if (/^[A-Za-z0-9_]{1,50}$/.test(handle)) return \`@\${handle}\`;
+      if (/^[A-Za-z0-9_]{1,50}$/.test(handle)) return `@${handle}`;
     } catch {}
     return "";
   }
@@ -412,7 +419,7 @@
     const m = txt && txt.match(URL_RE);
     if (!m) return "";
     const host = extractDomain(m[1]);
-    if (!host || isTwitterDomain(host)) return ""; // skip to avoid generic X icon
+    if (!host || isTwitterDomain(host)) return "";
     return unavatarForDomain(host);
   }
   function faviconForUrlishSkippingTwitter(txt){
@@ -441,11 +448,10 @@
 
   /* Cache key per row */
   function imageCacheKey(row){
-    const v = (row[21]||""); // V is index 21
+    const v = (row[21]||"");
     const g = (row[G_COL_IDX]||"");
     const e = (row[E_COL_IDX]||"");
-    // F intentionally not included (we're not using it for images)
-    return \`ftt-imgcache:\${GID}:\${v}|\${g}|\${e}\`;
+    return `ftt-imgcache:${GID}:${v}|${g}|${e}`;
   }
   function cacheGetGoodSrc(row){
     try { return localStorage.getItem(imageCacheKey(row)) || ""; } catch { return ""; }
@@ -510,17 +516,17 @@
   function proxify(url){
     try {
       const noScheme = url.replace(/^https?:\/\//i,"");
-      return \`https://images.weserv.nl/?url=\${encodeURIComponent(noScheme)}&w=\${THUMB_PX}&h=\${THUMB_PX}&fit=cover&q=70\`;
+      return `https://images.weserv.nl/?url=${encodeURIComponent(noScheme)}&w=${THUMB_PX}&h=${THUMB_PX}&fit=cover&q=70`;
     } catch { return url; }
   }
 
   /** ==== Collapse state per tab (persisted) ==== */
   function loadCollapseState(gid){
-    try { return JSON.parse(localStorage.getItem(\`ftt-collapse:\${gid}\`)) || {}; }
+    try { return JSON.parse(localStorage.getItem(`ftt-collapse:${gid}`)) || {}; }
     catch { return {}; }
   }
   function saveCollapseState(gid, map){
-    try { localStorage.setItem(\`ftt-collapse:\${gid}\`, JSON.stringify(map)); }
+    try { localStorage.setItem(`ftt-collapse:${gid}`, JSON.stringify(map)); }
     catch {}
   }
 
@@ -547,19 +553,67 @@
     };
   }
 
-  /** ==== GViz fetch ==== */
+  /** ==== Data fetchers (GViz first, CSV fallback) ==== */
   function gvizURL(fileId, gid, range){
-    const u = new URL(\`https://docs.google.com/spreadsheets/d/\${fileId}/gviz/tq\`);
+    const u = new URL(`https://docs.google.com/spreadsheets/d/${fileId}/gviz/tq`);
     u.searchParams.set("gid", gid);
     u.searchParams.set("range", range);
     u.searchParams.set("tqx", "out:json");
     u.searchParams.set("_", Date.now());
     return u.toString();
   }
-  async function fetchRectFor(gid){
-    const res  = await fetch(gvizURL(FILE_ID, gid, RANGE), { cache: "no-store" });
+  function csvURL(fileId, gid){
+    const u = new URL(`https://docs.google.com/spreadsheets/d/${fileId}/export`);
+    u.searchParams.set("format", "csv");
+    u.searchParams.set("gid", gid);
+    u.searchParams.set("_", Date.now());
+    return u.toString();
+  }
+
+  function parseGViz(text){
+    // Strip JS wrapper to get the JSON object
+    const jsonStr = text.replace(/^[^{]+/, "").replace(/[^}]+$/, "");
+    return JSON.parse(jsonStr);
+  }
+
+  function parseCSV(text){
+    // Simple CSV parser supporting quotes and commas
+    const rows = [];
+    let i=0, field="", row=[], inQuotes=false;
+    while (i < text.length){
+      const ch = text[i++];
+      if (inQuotes){
+        if (ch === '"'){
+          if (text[i] === '"'){ field += '"'; i++; }
+          else inQuotes = false;
+        } else {
+          field += ch;
+        }
+      } else {
+        if (ch === '"'){ inQuotes = true; }
+        else if (ch === ','){ row.push(field); field=""; }
+        else if (ch === '\n' || ch === '\r'){
+          if (ch === '\r' && text[i] === '\n') i++; // CRLF
+          row.push(field); rows.push(row); row=[]; field="";
+        } else {
+          field += ch;
+        }
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  async function fetchViaGViz(gid){
+    const url = gvizURL(FILE_ID, gid, RANGE);
+    dbg.textContent = `GViz: ${url}`;
+    const res  = await fetch(url, { cache: "no-store" });
     const text = await res.text();
-    const fixed = JSON.parse(text.replace(/^[^{]+/, "").replace(/[^}]+$/, ""));
+    if (!res.ok) throw new Error(`GViz HTTP ${res.status}`);
+    if (/You need access|Sign in|login/i.test(text)) {
+      throw new Error("GViz says: spreadsheet is not publicly accessible.");
+    }
+    const fixed = parseGViz(text);
     const rows = (fixed.table?.rows || []).map(r =>
       (r.c || []).map(cell => {
         if (!cell) return "";
@@ -570,7 +624,49 @@
     const cols = (fixed.table?.cols || []);
     const colCount = Math.max(cols.length, ...rows.map(r => r.length), MAX_SHOW_COL_IDX+1, 0);
     rows.forEach(r => { while (r.length < colCount) r.push(""); });
-    return { rows, colCount };
+    return { rows, colCount, src: "gviz" };
+  }
+
+  async function fetchViaCSV(gid){
+    const url = csvURL(FILE_ID, gid);
+    dbg.textContent = `CSV: ${url}`;
+    const res  = await fetch(url, { cache: "no-store" });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`CSV HTTP ${res.status}`);
+    if (/HTML|<title>|Sign in|You need access/i.test(text)) {
+      throw new Error("CSV says: spreadsheet is not publicly accessible.");
+    }
+    const raw = parseCSV(text);
+    // Pad to MAX_SHOW_COL_IDX+1
+    const colCount = Math.max(...raw.map(r => r.length), MAX_SHOW_COL_IDX+1, 0);
+    const rows = raw.map(r => {
+      const arr = r.map(x => String(x ?? ""));
+      while (arr.length < colCount) arr.push("");
+      return arr;
+    });
+    return { rows, colCount, src: "csv" };
+  }
+
+  async function fetchRectFor(gid){
+    // Try GViz, then CSV
+    try {
+      const pack = await fetchViaGViz(gid);
+      meta.classList.remove("error");
+      return pack;
+    } catch (e1){
+      console.warn("GViz failed, trying CSV:", e1);
+      meta.classList.add("error");
+      meta.textContent = `GViz failed (${e1.message}). Trying CSV…`;
+      try {
+        const pack = await fetchViaCSV(gid);
+        meta.classList.remove("error");
+        return pack;
+      } catch (e2){
+        meta.classList.add("error");
+        meta.textContent = `Both GViz and CSV failed. Check sheet sharing (“Anyone with link – Viewer”).`;
+        throw e2;
+      }
+    }
   }
   async function fetchRect(){ return fetchRectFor(GID); }
 
@@ -600,7 +696,7 @@
       const row = rows[i];
       if (isOnlyColAText(row)) {
         const name = (row[0]||"").trim() || "Untitled";
-        current = { headerIndex: i, stateName: name, members: [], collapsed: (state[name] !== undefined ? state[name] : False) };
+        current = { headerIndex: i, stateName: name, members: [], collapsed: (state[name] !== undefined ? state[name] : true) };
         groups.push(current);
       } else if (current) {
         current.members.push(i);
@@ -685,398 +781,3 @@
   }
 
   /** ==== Render (with per-group sort) ==== */
-  function render({ rows, colCount }){
-    currentRows = rows;
-    currentColCount = colCount;
-
-    imgCandCache.clear();
-    buildColgroup();
-    tbody.innerHTML = "";
-    document.body.classList.toggle("hide-images", !imgToggle.checked);
-
-    const groups = buildGroups(rows);
-    const groupByHeaderIndex = new Map(groups.map(g => [g.headerIndex, g]));
-    const sortedMemberLists = new Map();
-
-    if (sortSpec && typeof sortSpec.colIdx === "number") {
-      const cmp = comparator(sortSpec.colIdx, sortSpec.dir);
-      for (const g of groups) {
-        const sorted = [...g.members].sort(cmp);
-        sortedMemberLists.set(g.headerIndex, sorted);
-      }
-    }
-
-    const renderRowByIndex = (rIdx) => {
-      const row = rows[rIdx];
-
-      if (isOnlyColAText(row)) {
-        const g = groupByHeaderIndex.get(rIdx);
-        const tr = document.createElement("tr");
-        if (rIdx === 0) tr.classList.add("is-hidden");
-        if (rIdx === 1) tr.classList.add("sticky-second");
-        tr.classList.add("state-header");
-        if (!g.collapsed) tr.classList.add("expanded");
-
-        const td = document.createElement("td");
-        td.colSpan = 1 + (MAX_SHOW_COL_IDX + 1);
-        const bar = document.createElement("div");
-        bar.className = "state-bar";
-        const chev = document.createElement("span"); chev.className = "chev";
-        const label = document.createElement("span"); label.textContent = g.stateName;
-        bar.appendChild(chev); bar.appendChild(label); td.appendChild(bar); tr.appendChild(td);
-        tbody.appendChild(tr);
-
-        tr.addEventListener("click", ()=>{
-          g.collapsed = !g.collapsed;
-          tr.classList.toggle("expanded", !g.collapsed);
-          persistGroups(groups);
-          const memberRows = tbody.querySelectorAll(\`tr[data-group="\${g.headerIndex}"]\`);
-          memberRows.forEach(mtr => {
-            if (g.collapsed) {
-              mtr.setAttribute("data-collapsed","true");
-            } else {
-              mtr.removeAttribute("data-collapsed");
-              // Build images now that they’re visible
-              const idx = parseInt(mtr.getAttribute("data-row-index"), 10);
-              const row = currentRows[idx];
-              const tdImg = mtr.querySelector("td.imgCol");
-              if (tdImg && imgToggle.checked) buildImageCell(tdImg, row, idx);
-            }
-          });
-        });
-
-        const members = sortedMemberLists.has(g.headerIndex) ? sortedMemberLists.get(g.headerIndex) : g.members;
-        for (const mi of members) renderDataRow(mi, g);
-        return;
-      }
-
-      const belongs = groups.find(g => g.members.includes(rIdx));
-      if (!belongs) renderDataRow(rIdx, null);
-    };
-
-    function renderDataRow(rIdx, groupObj){
-      const row = rows[rIdx];
-      const tr = document.createElement("tr");
-      tr.setAttribute("data-row-index", String(rIdx));
-      if (rIdx === 0) tr.classList.add("is-hidden");
-      if (rIdx === 1) tr.classList.add("sticky-second");
-
-      if (groupObj) {
-        tr.setAttribute("data-group", groupObj.headerIndex);
-        if (groupObj.collapsed) tr.setAttribute("data-collapsed","true");
-      }
-
-      // Image cell (click opens E→G)
-      const tdImg = document.createElement("td");
-      tdImg.className = "imgCol";
-
-      const groupIsCollapsed = !!(groupObj && groupObj.collapsed);
-      if (imgToggle.checked && !groupIsCollapsed) {
-        buildImageCell(tdImg, row, rIdx);
-      }
-      tr.appendChild(tdImg);
-
-      // Columns A..S only
-      for (let c = 0; c <= MAX_SHOW_COL_IDX; c++) {
-        const td  = document.createElement("td");
-        const txt = row[c] ?? "";
-        const lower = (txt||"").toString().trim().toLowerCase();
-
-        if (c === I_COL_IDX) {
-          const span = document.createElement("span");
-          span.className = "sentiment";
-          if (lower === "positive") { span.textContent = "👍"; span.title = "Positive"; }
-          else if (lower === "negative") { span.textContent = "👎"; span.title = "Negative"; }
-          else if (lower === "neutral")  { span.textContent = "🤷"; span.title = "Neutral";  }
-          else { makeTextCell(td, txt); tr.appendChild(td); continue; }
-          td.appendChild(span);
-        }
-        else if (c === G_COL_IDX) {
-          // If G is @handle, render as @handle link.
-          // If G is a twitter/x URL, render it *as* @handle link.
-          const handleLink = buildTwitterLinkFromHandle(txt);
-          if (handleLink) {
-            td.appendChild(handleLink);
-          } else {
-            const at = extractTwitterHandleFromUrlish(txt);
-            if (at) {
-              const a = document.createElement("a");
-              a.href = \`https://x.com/\${at.slice(1)}\`;
-              a.target = "_blank"; a.rel = "noopener";
-              a.textContent = at;
-              a.className = "cell-link";
-              td.appendChild(a);
-            } else {
-              const frag = linkifyWithMore(txt);
-              if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-            }
-          }
-        }
-        else if (c === E_COL_IDX) {
-          const frag = linkifyWithMore(txt, { alwaysShow: true });
-          if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-        }
-        else if (c === F_COL_IDX) {
-          // Still show F normally (link text), but DO NOT use F for images.
-          const frag = linkifyWithMore(txt, { alwaysShow: true });
-          if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-        }
-        else if (c === P_COL_IDX) {
-          const rl = buildRedditLink(txt);
-          if (rl) td.appendChild(rl);
-          else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
-        }
-        else if (c === Q_COL_IDX) {
-          const tel = buildTelAnchor(txt);
-          if (tel) td.appendChild(tel);
-          else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
-        }
-        else {
-          const frag = linkifyWithMore(txt);
-          if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-        }
-        tr.appendChild(td);
-      }
-
-      tbody.appendChild(tr);
-    }
-
-    // Walk rows and render (headers + members) in order
-    for (let i=0; i<rows.length && i<ROW_CAP; i++){
-      const row = rows[i];
-      if (isOnlyColAText(row)) {
-        renderRowByIndex(i);
-        const g = groups.find(x => x.headerIndex === i);
-        if (g && g.members.length) {
-          i = g.members[g.members.length - 1];
-        }
-      } else {
-        const inGroup = groups.find(g => g.members.includes(i));
-        if (!inGroup) renderRowByIndex(i);
-      }
-    }
-
-    // Expand/Collapse All (persist)
-    expandAllBtn.onclick = () => {
-      groups.forEach(g => g.collapsed = false);
-      persistGroups(groups);
-      tbody.querySelectorAll("tr.state-header").forEach(tr => tr.classList.add("expanded"));
-      const members = tbody.querySelectorAll('tr[data-group]');
-      members.forEach(mtr => {
-        mtr.removeAttribute("data-collapsed");
-        const idx = parseInt(mtr.getAttribute("data-row-index"), 10);
-        const row = currentRows[idx];
-        const tdImg = mtr.querySelector("td.imgCol");
-        if (tdImg && imgToggle.checked) buildImageCell(tdImg, row, idx);
-      });
-    };
-    collapseAllBtn.onclick = () => {
-      groups.forEach(g => g.collapsed = true);
-      persistGroups(groups);
-      tbody.querySelectorAll("tr.state-header").forEach(tr => tr.classList.remove("expanded"));
-      tbody.querySelectorAll('tr[data-group]').forEach(tr => tr.setAttribute("data-collapsed","true"));
-    };
-
-    meta.textContent = \`src=gviz • gid=\${GID} • rows: \${rows.length} (showing \${Math.min(rows.length, ROW_CAP)}) • cols: \${colCount} • \${new Date().toLocaleTimeString()}\`;
-
-    // ---- Restore scroll position after render ----
-    restoreScrollFor(GID);
-  }
-
-  /** ==== Search (debounced) ==== */
-  function applySearch(q, fromRender=false){
-    lastQuery = (q || "").trim().toLowerCase();
-
-    const headers = tbody.querySelectorAll("tr.state-header");
-    if (lastQuery) {
-      headers.forEach(h => h.classList.add("expanded"));
-      tbody.querySelectorAll("tr[data-group]").forEach(tr => tr.removeAttribute("data-collapsed"));
-      const rows = tbody.querySelectorAll("tr");
-      let shown = 0;
-      rows.forEach(tr => {
-        if (tr.classList.contains("state-header")) { tr.classList.remove("search-row-hide"); return; }
-        if (tr.classList.contains("is-hidden")) { tr.classList.add("search-row-hide"); return; }
-        const text = tr.textContent.toLowerCase();
-        const match = text.includes(lastQuery);
-        tr.classList.toggle("search-row-hide", !match);
-        if (match) shown++;
-      });
-      meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
-      meta.textContent += \` • matches: \${shown}\`;
-    } else {
-      tbody.querySelectorAll("tr").forEach(tr => tr.classList.remove("search-row-hide"));
-      if (!fromRender && currentRows.length) render({ rows: currentRows, colCount: currentColCount });
-      meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
-    }
-  }
-  const debouncedSearch = debounce(()=>applySearch(searchBox.value), 150);
-
-  /** ==== Export (current view) ==== */
-  function exportCurrentViewCSV(){
-    const header = COL_HEADERS.slice(0, MAX_SHOW_COL_IDX + 1);
-    const out = [header];
-
-    const trs = tbody.querySelectorAll('tr[data-row-index]');
-    trs.forEach(tr => {
-      if (tr.classList.contains('search-row-hide')) return;
-      if (tr.hasAttribute('data-collapsed')) return;
-      const idx = parseInt(tr.getAttribute('data-row-index'), 10);
-      const row = currentRows[idx];
-      if (!row || isOnlyColAText(row)) return;
-      out.push(row.slice(0, MAX_SHOW_COL_IDX + 1));
-    });
-
-    const ts = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
-    const name = \`ftt-big-list_gid-\${GID}_\${ts}.csv\`;
-    downloadCSV(name, out);
-  }
-
-  /** ==== Export (all tabs, full data) ==== */
-  async function exportAllTabsCSV(){
-    const header = ["Region", ...COL_HEADERS.slice(0, MAX_SHOW_COL_IDX + 1)];
-    const out = [header];
-
-    for (const tab of TABS) {
-      try {
-        const pack = await fetchRectFor(tab.gid);
-        const rows = pack.rows || [];
-        for (let i=0; i<rows.length; i++){
-          const r = rows[i];
-          if (!r) continue;
-          if (isOnlyColAText(r)) continue;
-          if (i === 0) continue; // often metadata row
-          const slice = r.slice(0, MAX_SHOW_COL_IDX + 1);
-          out.push([tab.name, ...slice]);
-        }
-      } catch (e){
-        console.error("Export tab failed", tab, e);
-      }
-    }
-
-    const ts = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
-    const name = \`ftt-big-list_ALL-TABS_\${ts}.csv\`;
-    downloadCSV(name, out);
-  }
-
-  /** ==== Scroll persistence helpers ==== */
-  function saveScrollFor(gid, top){
-    try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {}
-  }
-  function loadScrollFor(gid){
-    try {
-      const v = localStorage.getItem(SCROLL_KEY_PREFIX + gid);
-      return v ? parseInt(v, 10) || 0 : 0;
-    } catch { return 0; }
-  }
-  const debouncedSaveScroll = debounce(()=>{
-    saveScrollFor(GID, scrollWrap.scrollTop || 0);
-  }, 120);
-
-  /** ==== Load + poll ==== */
-  async function load(){
-    // save current scroll before reloading (so refresh during same tab keeps place)
-    saveScrollFor(GID, scrollWrap.scrollTop || 0);
-
-    meta.textContent = "loading…";
-    try {
-      const pack = await fetchRect();
-      render(pack);
-      if (lastQuery) applySearch(lastQuery, /*fromRender*/true);
-    } catch(e){
-      console.error(e);
-      meta.textContent = "Error loading GViz (check sharing / range).";
-    }
-  }
-  let timer=null;
-  function startPolling(){ if (timer) clearInterval(timer); timer = setInterval(load, POLL_MS); }
-
-  /** ==== UI ==== */
-  // Tab buttons
-  $$(".button-row .btn").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      // persist outgoing tab scroll
-      saveScrollFor(GID, scrollWrap.scrollTop || 0);
-
-      $$(".button-row .btn").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      GID = btn.dataset.gid;
-
-      // remember last tab
-      try { localStorage.setItem(ACTIVE_GID_KEY, GID); } catch {}
-
-      await load(); // render() will call restoreScrollFor(GID)
-      if (lastQuery) applySearch(lastQuery);
-    });
-  });
-
-  // Track scrolling to save position
-  scrollWrap.addEventListener("scroll", debouncedSaveScroll);
-
-  imgToggle.addEventListener("change", ()=>{
-    saveShowImages(imgToggle.checked);
-    if (currentRows.length) render({ rows: currentRows, colCount: currentColCount });
-  });
-
-  // Sort controls
-  function applySort(){
-    const colLetter = sortColSel.value;
-    if (!colLetter) { sortSpec = null; }
-    else {
-      sortSpec = { colIdx: colLetterToIdx(colLetter), dir: (sortDirSel.value === "desc" ? "desc" : "asc") };
-    }
-    if (currentRows.length) {
-      // preserve scroll during sort
-      const prevTop = scrollWrap.scrollTop || 0;
-      render({ rows: currentRows, colCount: currentColCount });
-      scrollWrap.scrollTop = prevTop;
-    }
-  }
-  sortColSel.addEventListener("change", applySort);
-  sortDirSel.addEventListener("change", applySort);
-  applySortBtn.addEventListener("click", applySort);
-  clearSortBtn.addEventListener("click", ()=>{
-    sortColSel.value = ""; sortDirSel.value = "asc"; sortSpec = null; applySort();
-  });
-
-  // Search
-  searchBox.addEventListener("input", debouncedSearch);
-  clearSearchBtn.addEventListener("click", ()=>{
-    searchBox.value = "";
-    applySearch("");
-    searchBox.focus();
-  });
-
-  // Export
-  exportBtn.addEventListener("click", exportCurrentViewCSV);
-  exportAllBtn.addEventListener("click", exportAllTabsCSV);
-
-  /** ==== Restore scroll after render ==== */
-  function restoreScrollFor(gid){
-    const targetTop = loadScrollFor(gid);
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      scrollWrap.scrollTop = targetTop;
-    }));
-  }
-
-  /** ==== Boot ==== */
-  (async function boot(){
-    // restore last-tab if available
-    try {
-      const stored = localStorage.getItem(ACTIVE_GID_KEY);
-      if (stored && $(`.button-row .btn[data-gid="${stored}"]`)) {
-        GID = stored;
-        $$(".button-row .btn").forEach(b=>b.classList.toggle("active", b.dataset.gid === GID));
-      }
-    } catch {}
-    // restore image toggle
-    const v = localStorage.getItem("ftt-show-images");
-    const showImages = (v === null ? true : v === "true");
-    imgToggle.checked = showImages;
-    document.body.classList.toggle("hide-images", !showImages);
-
-    await load();   // render + restoreScrollFor(GID)
-    startPolling();
-  })();
-  </script>
-</body>
-</html>

@@ -18,17 +18,13 @@
     html, body { height: 100%; }
     :root{
       --brand:#0078d7;
-      --brand-2:#0a7ea4;
       --bg:#f4f7fa;
       --panel:#fff;
       --text:#222;
-      --muted:#6b7787;
       --line:#e9eef4;
       --line-2:#e0e6ee;
-      --chip:#ffffff22;
-      --badge:#eef3f9;
-      --state:#000;
       --accent:#0063b1;
+      --state:#000;
     }
     body {
       margin: 0; background: var(--bg); color: var(--text);
@@ -36,13 +32,11 @@
       display: flex; flex-direction: column;
     }
 
-    /* Header / controls */
     header { display: grid; gap: 8px; padding: 10px 12px; background: var(--brand); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
     header .top { display:flex; gap:12px; align-items:center; }
     h1 { margin:0; font-size:15px; font-weight:800; line-height:1.1; letter-spacing:.2px; }
     .meta { margin-left:auto; font-size:12px; opacity:.95; background: #ffffff1a; padding:4px 8px; border-radius:8px; }
 
-    /* Tabs row */
     .button-row { display:flex; flex-wrap:wrap; gap:6px; }
     .btn { color:#fff; background:#0063b1; border:0; border-radius:10px; padding:.40rem .65rem; font-weight:700; font-size:13px; cursor:pointer; transition:transform .05s ease, filter .2s ease; }
     .btn:active{ transform: translateY(1px); }
@@ -50,22 +44,12 @@
     .btn.europe{background:#6b46c1}.btn.eastasia{background:#e81123}.btn.mideast{background:#ffb900;color:#333}
     .btn.active{outline:2px solid #fff; outline-offset:1px; filter:brightness(1.06)}
 
-    /* Top controls */
-    .controls {
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; justify-content:flex-start;
-    }
-    .controls input[type="search"]{
-      padding:8px 10px; border-radius:10px; border:1px solid #c8d7eb; min-width:260px; outline: none; background:#fff;
-    }
-    .controls .btn-plain, .controls .btn {
-      font-size:12px; padding:.45rem .65rem; border-radius:10px; border:none;
-    }
-    .controls .btn-plain { background:#ffffff22; color:#fff; }
-    .switch { display:flex; align-items:center; gap:8px; background:#ffffff22; padding:6px 10px; border-radius:10px; }
+    .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; justify-content:flex-start; }
+    .controls input[type="search"]{ padding:8px 10px; border-radius:10px; border:1px solid #c8d7eb; min-width:260px; outline: none; background:#fff; }
+    .controls .btn { font-size:12px; padding:.45rem .65rem; border-radius:10px; border:none; }
 
-    /* Main / table */
     main { display:flex; flex-direction:column; }
-    .table-wrap { height: calc(100vh - 168px); overflow:auto; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .table-wrap { height: calc(100vh - 154px); overflow:auto; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 
     table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 14px; min-width: 2200px; }
     tbody td {
@@ -111,22 +95,17 @@
     .expanded .chev { transform: rotate(90deg); }
     tr[data-collapsed="true"] { display: none; }
 
-    /* Image column + hiding */
+    /* Image column + hiding (do NOT hide colgroup width anymore) */
     .imgCol { width: 160px; }
     .thumb  { width: 120px; height: 120px; border-radius:12px; border:1px solid #ececec; object-fit:cover; display:block; background:#f1f1f1; }
     .skeleton { width: 120px; height: 120px; background:linear-gradient(90deg,#eee,#f5f5f5,#eee); background-size:200% 100%; animation:shimmer 1s linear infinite; border-radius:12px; border:1px solid #ececec; }
     @keyframes shimmer{0%{background-position:0% 0}100%{background-position:200% 0}}
-    .hide-images col:first-child { width:0 !important; }
     .hide-images .imgCol { display:none; }
 
     /* Links */
     td a { white-space: nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
     .cell-link { color: inherit; text-decoration: underline; }
-    .full-url {
-      display:none; margin-top:6px; font-size:12px; color:#333;
-      word-break: break-all; white-space: normal;
-      background:#f6f8fb; border:1px solid #e5ebf3; border-radius:8px; padding:6px;
-    }
+    .full-url { display:none; margin-top:6px; font-size:12px; color:#333; word-break: break-all; white-space: normal; background:#f6f8fb; border:1px solid #e5ebf3; border-radius:8px; padding:6px; }
     .show-full .full-url { display:block; }
 
     /* Global text clamp + More/Less */
@@ -140,9 +119,7 @@
     /* Tiny icon cells (Column I) */
     .sentiment { font-size:18px; line-height:1; }
 
-    /* Mini footer actions */
     .footer-actions{ padding:8px 12px; display:flex; gap:8px; align-items:center; color:#4b5563; font-size:12px;}
-    .chip{ background:#eef2f7; border:1px solid #e5ebf3; padding:4px 8px; border-radius:999px; }
     .linkish{ color:#0a5a7a; cursor:pointer; text-decoration:underline; }
   </style>
 </head>
@@ -173,7 +150,6 @@
 
       <button id="expandAll" class="btn" style="background:#3aa655">Expand all</button>
       <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
-      <span class="chip">Tip: click a column name in the pinned header row to sort within each state.</span>
     </div>
   </header>
 
@@ -197,7 +173,6 @@
   const MAX_SHOW_COL_LETTER = "S";
   const MAX_SHOW_COL_IDX = colLetterToIdx(MAX_SHOW_COL_LETTER);
 
-  /* Tabs for all-tabs export (kept for CSV-all) */
   const TABS = [
     { name: "United States", gid: "0" },
     { name: "Canada", gid: "918890863" },
@@ -207,7 +182,6 @@
     { name: "Middle East", gid: "1604960979" },
   ];
 
-  /* Remember-last-tab + per-tab scroll keys + sort persist */
   const ACTIVE_GID_KEY = "ftt-active-gid";
   const SCROLL_KEY_PREFIX = "ftt-scroll:"; // + GID
   const SORT_KEY_PREFIX   = "ftt-sort:";   // + GID
@@ -221,11 +195,13 @@
   const IMAGE_PREF_COL_IDX = colLetterToIdx(IMAGE_PREF_COL_LETTER);
 
   /* Column indexes (A=0): E=4, F=5, G=6, H=7, I=8, J=9, P=15, Q=16 */
+  const A_COL_IDX = 0, B_COL_IDX = 1;
   const E_COL_IDX = 4, F_COL_IDX = 5, G_COL_IDX = 6, H_COL_IDX = 7, I_COL_IDX = 8, J_COL_IDX = 9, P_COL_IDX = 15, Q_COL_IDX = 16;
 
-  /* Sortable header labels we’ll recognize on the sticky header row */
+  /* Sortable header labels on the sticky header row */
   const SORTABLE_HEADERS = new Map([
     ["Location","A"],
+    ["Alternative Location","B"],
     ["Domme","C"],
     ["Verified?","H"],
     ["Experience?","I"],
@@ -240,7 +216,6 @@
   const IMG_TIMEOUT_MS = 3000;
   const LAZY_ROOT_MARGIN = '1200px 0px';
 
-  /* Column headers A..S (for CSV output) */
   const COL_HEADERS = [
     "Location","Alternative Location","Domme","Images/Aliases","Website","Link tree/All links",
     "X/BlueSky","Verified?","Experience?","Price range?","Review/notes","Renown",
@@ -264,8 +239,7 @@
   /** ==== State ==== */
   let currentRows = [];
   let currentColCount = 0;
-  // sortSpec = { colIdx: number, dir: "asc" | "desc" }
-  let sortSpec = null;
+  let sortSpec = null; // { colIdx, dir: 'asc'|'desc' }
   let lastQuery = "";
   let imgCandCache = new Map();
 
@@ -273,20 +247,12 @@
   let inflight = 0;
   const pendingStarts = [];
   function schedule(startFn){
-    if (inflight < MAX_CONCURRENT_IMG){
-      inflight++;
-      startFn();
-    } else {
-      pendingStarts.push(startFn);
-    }
+    if (inflight < MAX_CONCURRENT_IMG){ inflight++; startFn(); }
+    else { pendingStarts.push(startFn); }
   }
   function doneOne(){
     inflight = Math.max(0, inflight - 1);
-    if (pendingStarts.length){
-      const fn = pendingStarts.shift();
-      inflight++;
-      fn();
-    }
+    if (pendingStarts.length){ const fn = pendingStarts.shift(); inflight++; fn(); }
   }
 
   /** ==== Lazy image observer ==== */
@@ -304,116 +270,91 @@
   const URL_RE = /(https?:\/\/[^\s)'"<>]+)/i;
   const IMG_EXT_RE   = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
   const IMG_HOST_HINT= /(twimg\.com|fbcdn\.net|cdn|images|media|imgur|ggpht\.com|pinimg\.com)/i;
-
   function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
-
-  /* CSV helpers */
-  function csvEscape(v){
-    const s = (v ?? "").toString().replace(/\r?\n/g, " ").trim();
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
-  }
+  function csvEscape(v){ const s=(v??"").toString().replace(/\r?\n/g," ").trim(); return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }
   function downloadCSV(filename, rows){
     const csv = "\uFEFF" + rows.map(r => r.map(csvEscape).join(",")).join("\r\n");
     const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
+    const a = document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
     setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
   }
+  function extractFirstNumber(s){
+    if (!s) return Number.POSITIVE_INFINITY;
+    const m = String(s).replace(/,/g,'').match(/(\d+(\.\d+)?)/);
+    return m ? parseFloat(m[1]) : Number.POSITIVE_INFINITY;
+  }
+  function norm(s){ return (s||"").toString().trim().toLowerCase(); }
 
-  /* Linkify plain URLs (with More/Less) */
-  function linkifyWithMore(text, {alwaysShow=false} = {}){
-    const m = text && text.match(URL_RE);
-    if (!m) return null;
-    const url = m[1];
-    const frag = document.createDocumentFragment();
-    const a = document.createElement("a");
-    a.href = url; a.target = "_blank"; a.rel = "noopener";
-    a.textContent = text; a.className = "cell-link";
-    frag.appendChild(a);
+  /* Price range ranking */
+  function priceRank(s){
+    const t = norm(s);
+    if (!t || t.includes("unknown")) return Number.POSITIVE_INFINITY;
+    const hasLow = t.includes("low");
+    const hasMid = t.includes("mid");
+    const hasHighMid = t.includes("high mid") || t.includes("high-mid") || t.includes("mid high") || t.includes("mid-high");
+    const hasHigh = t.includes("high");
 
-    if (alwaysShow || url.length > 60) {
-      const btn = document.createElement("span");
-      btn.className = "moreless";
-      btn.textContent = " More";
-      const wrap = document.createElement("div");
-      wrap.className = "full-url";
-      wrap.textContent = url;
-
-      btn.addEventListener("click", ()=>{
-        const td = btn.parentElement;
-        td.classList.toggle("show-full");
-        btn.textContent = td.classList.contains("show-full") ? " Less" : " More";
-      });
-
-      frag.appendChild(btn);
-      frag.appendChild(wrap);
-    }
-    return frag;
+    // Priority: low -> low+mid -> mid -> high mid -> high -> other text
+    if (hasLow && !hasMid) return 0;
+    if (hasLow && hasMid)  return 1;
+    if (!hasLow && hasMid && !hasHighMid) return 2;
+    if (hasHighMid) return 3;
+    if (hasHigh) return 4;
+    return 5; // other/uncategorized text with content
   }
 
-  /* Twitter/X & Reddit helpers */
-  function buildTwitterLinkFromHandle(txt){
-    if (!txt) return null;
-    const at = txt.trim();
-    if (!/^@[\w.]{1,50}$/i.test(at)) return null;
-    const handle = at.slice(1);
-    const a = document.createElement("a");
-    a.href = `https://x.com/${handle}`;
-    a.target = "_blank"; a.rel = "noopener";
-    a.textContent = at; a.className = "cell-link";
-    return a;
-  }
-  function parseRedditUsername(raw) {
-    if (!raw) return null;
-    let s = String(raw).trim();
-    s = s.replace(/^@/,'').replace(/^\/?u\//i,'');
-    s = s.split(/\s+/)[0];
-    if (!/^[A-Za-z0-9_]{2,25}$/.test(s)) return null;
-    return s;
-  }
-  function buildRedditLink(raw){
-    const user = parseRedditUsername(raw);
-    if (!user) return null;
-    const a = document.createElement("a");
-    a.href = `https://www.reddit.com/user/${encodeURIComponent(user)}`;
-    a.target = "_blank"; a.rel = "noopener";
-    a.textContent = `u/${user}`;
-    a.className = "cell-link";
-    return a;
+  /* Verified ranking */
+  function verifiedRank(s){
+    const t = norm(s);
+    if (!t) return 9; // blank bottom
+    if (t.includes("scam")) return 8; // scam/scammer right above blank
+    if (t.includes("admin verified")) return 0;
+    if (t.includes("reddit verified")) return 1;
+    if (t.includes("fetlife verified")) return 2;
+    // plain "verified" (but not the above specifics)
+    if (/\bverified\b/.test(t)) return 3;
+    if (t.includes("seems legit")) return 4;
+    if (t.includes("needs verification")) return 5;
+    if (t.includes("mixed")) return 6;
+    return 7; // anything else with content
   }
 
-  /* Phone helpers */
-  function normalizeDigits(str) { return (str || "").replace(/\D+/g, ""); }
-  function formatUSPhone(digits) {
-    if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-    if (digits.length === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
-    return digits;
-  }
-  function buildTelAnchor(raw) {
-    const d = normalizeDigits(raw);
-    if (!d) return null;
-    const a = document.createElement("a");
-    a.href = `tel:${d.length===11 && d[0]==='1' ? '+'+d : (d.length===10 ? '+1'+d : d)}`;
-    a.target = "_self";
-    a.textContent = formatUSPhone(d);
-    a.className = "cell-link";
-    return a;
+  /* Experience ranking */
+  function experienceRank(s){
+    const t = norm(s);
+    if (!t) return 6; // blank last
+    if (t.includes("positive")) return 0;
+    if (t.includes("neutral"))  return 1;
+    if (t.includes("mixed"))    return 2;
+    if (t.includes("needs review")) return 3;
+    if (t.includes("negative")) return 4;
+    return 5; // anything else with content
   }
 
-  /* Avatars/favicons + Twitter helpers */
+  /* Basic helpers */
+  function firstUrl(text){ const m=(text||"").match(URL_RE); return m?m[1]:""; }
+  function preferredLandingUrl(row){ return firstUrl(row[E_COL_IDX]) || firstUrl(row[G_COL_IDX]) || ""; }
+  function isOnlyColAText(row){
+    const colA = (row[0] || "").trim(); if (!colA) return false;
+    for (let i=1;i<row.length;i++) if ((row[i]||"").trim()!=="") return false; return true;
+  }
+
+  /* Cache key per row */
+  function imageCacheKey(row){
+    const v = (row[21]||""); const g = (row[G_COL_IDX]||""); const e = (row[E_COL_IDX]||"");
+    return `ftt-imgcache:${GID}:${v}|${g}|${e}`;
+  }
+  function cacheGetGoodSrc(row){ try { return localStorage.getItem(imageCacheKey(row)) || ""; } catch { return ""; } }
+  function cacheSetGoodSrc(row, rawUrl){ try { localStorage.setItem(imageCacheKey(row), rawUrl); } catch {} }
+
+  /* Twitter profile image candidates (strict, no favicon) */
   function extractDomain(url) { try { return new URL(url).hostname; } catch { return ""; } }
-  function isTwitterDomain(host){
-    return /(^|\.)x\.com$/.test(host) || /(^|\.)twitter\.com$/.test(host);
-  }
+  function isTwitterDomain(host){ return /(^|\.)x\.com$/.test(host) || /(^|\.)twitter\.com$/.test(host); }
   function unavatarForDomain(domain) { return domain ? `https://unavatar.io/${encodeURIComponent(domain)}?fallback=false` : ""; }
   function faviconForDomain(domain) { return domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128` : ""; }
   function unavatarForTwitterHandleStrict(txt) {
-    const at = (txt || "").trim();
-    if (!/^@[\w.]{1,50}$/i.test(at)) return [];
+    const at = (txt || "").trim(); if (!/^@[\w.]{1,50}$/i.test(at)) return [];
     const h = at.slice(1);
     return [
       `https://unavatar.io/x/${encodeURIComponent(h)}?fallback=false`,
@@ -421,11 +362,9 @@
     ];
   }
   function extractTwitterHandleFromUrlish(txt){
-    const m = (txt || "").match(URL_RE);
-    if (!m) return "";
+    const m = (txt || "").match(URL_RE); if (!m) return "";
     try {
-      const u = new URL(m[1]);
-      if (!isTwitterDomain(u.hostname)) return "";
+      const u = new URL(m[1]); if (!isTwitterDomain(u.hostname)) return "";
       const parts = u.pathname.split('/').filter(Boolean);
       const handle = parts[0] || "";
       if (/^[A-Za-z0-9_]{1,50}$/.test(handle)) return `@${handle}`;
@@ -433,70 +372,22 @@
     return "";
   }
   function unavatarForUrlishSkippingTwitter(txt){
-    const m = txt && txt.match(URL_RE);
-    if (!m) return "";
-    const host = extractDomain(m[1]);
-    if (!host || isTwitterDomain(host)) return ""; // skip to avoid generic X icon
+    const m = txt && txt.match(URL_RE); if (!m) return "";
+    const host = extractDomain(m[1]); if (!host || isTwitterDomain(host)) return "";
     return unavatarForDomain(host);
   }
   function faviconForUrlishSkippingTwitter(txt){
-    const m = txt && txt.match(URL_RE);
-    if (!m) return "";
-    const host = extractDomain(m[1]);
-    if (!host || isTwitterDomain(host)) return "";
+    const m = txt && txt.match(URL_RE); if (!m) return "";
+    const host = extractDomain(m[1]); if (!host || isTwitterDomain(host)) return "";
     return faviconForDomain(host);
   }
 
-  /* Basic helpers */
-  function firstUrl(text){
-    const m = (text || "").match(URL_RE);
-    return m ? m[1] : "";
-  }
-  function preferredLandingUrl(row){
-    // Click-through: E → G (no F to avoid Linktree logos)
-    return firstUrl(row[E_COL_IDX]) || firstUrl(row[G_COL_IDX]) || "";
-  }
-  function isOnlyColAText(row){
-    const colA = (row[0] || "").trim();
-    if (!colA) return false;
-    for (let i=1;i<row.length;i++) if ((row[i]||"").trim()!=="") return false;
-    return true;
-  }
-
-  /* Cache key per row */
-  function imageCacheKey(row){
-    const v = (row[21]||""); // V is index 21
-    const g = (row[G_COL_IDX]||"");
-    const e = (row[E_COL_IDX]||"");
-    // F intentionally not included (we're not using it for images)
-    return `ftt-imgcache:${GID}:${v}|${g}|${e}`;
-  }
-  function cacheGetGoodSrc(row){
-    try { return localStorage.getItem(imageCacheKey(row)) || ""; } catch { return ""; }
-  }
-  function cacheSetGoodSrc(row, rawUrl){
-    try { localStorage.setItem(imageCacheKey(row), rawUrl); } catch {}
-  }
-
-  /* Twitter profile image candidates (strict, no favicon) */
-  function twitterAvatarCandidatesFromGCell(gCellText){
-    const list = [];
-    list.push(...unavatarForTwitterHandleStrict(gCellText));
-    const h = extractTwitterHandleFromUrlish(gCellText);
-    if (h) list.push(...unavatarForTwitterHandleStrict(h));
-    return list;
-  }
-
-  /* Candidates — order: V → G → E (NO F) + final scan. */
+  /* Image candidates */
   function imageCandidates(row){
-    const cached = cacheGetGoodSrc(row);
-    const out = [];
-    if (cached) out.push(cached);
-
-    // 1) V
+    const cached = cacheGetGoodSrc(row); const out = []; if (cached) out.push(cached);
+    // V
     if (IMAGE_PREF_COL_IDX >= 0 && IMAGE_PREF_COL_IDX < row.length) {
-      const vtxt = row[IMAGE_PREF_COL_IDX] || "";
-      const vm = vtxt.match(URL_RE);
+      const vtxt = row[IMAGE_PREF_COL_IDX] || ""; const vm = vtxt.match(URL_RE);
       if (vm) {
         const v = vm[1];
         if (IMG_EXT_RE.test(v) || IMG_HOST_HINT.test(v)) out.push(v);
@@ -506,79 +397,80 @@
         }
       }
     }
-
-    // 2) G (strict twitter avatar) and (if non-twitter URL) site avatar
-    const gStrict = twitterAvatarCandidatesFromGCell(row[G_COL_IDX]);
+    // G strict + general
+    const gStrict = unavatarForTwitterHandleStrict(row[G_COL_IDX]) .concat(unavatarForTwitterHandleStrict(extractTwitterHandleFromUrlish(row[G_COL_IDX])));
     if (gStrict.length) out.push(...gStrict);
-    const gGen = unavatarForUrlishSkippingTwitter(row[G_COL_IDX]) || faviconForUrlishSkippingTwitter(row[G_COL_IDX]);
-    if (gGen) out.push(gGen);
-
-    // 3) E (site avatar/fav)
-    const eGen = unavatarForUrlishSkippingTwitter(row[E_COL_IDX]) || faviconForUrlishSkippingTwitter(row[E_COL_IDX]);
-    if (eGen) out.push(eGen);
-
-    // Final: any direct image anywhere in row
+    const gGen = unavatarForUrlishSkippingTwitter(row[G_COL_IDX]) || faviconForUrlishSkippingTwitter(row[G_COL_IDX]); if (gGen) out.push(gGen);
+    // E general
+    const eGen = unavatarForUrlishSkippingTwitter(row[E_COL_IDX]) || faviconForUrlishSkippingTwitter(row[E_COL_IDX]); if (eGen) out.push(eGen);
+    // Final scan
     for (const cell of row) {
-      if (!cell) continue;
-      const m = cell.match(URL_RE);
-      if (!m) continue;
-      const url = m[1];
-      if (IMG_EXT_RE.test(url) || IMG_HOST_HINT.test(url)) out.push(url);
+      if (!cell) continue; const m = cell.match(URL_RE); if (!m) continue;
+      const url = m[1]; if (IMG_EXT_RE.test(url) || IMG_HOST_HINT.test(url)) out.push(url);
     }
-
-    // Dedupe
-    const seen = new Set();
-    return out.filter(u => { if (seen.has(u)) return false; seen.add(u); return true; });
+    // dedupe
+    const seen = new Set(); return out.filter(u => { if (seen.has(u)) return false; seen.add(u); return true; });
   }
-
   function proxify(url){
-    try {
-      const noScheme = url.replace(/^https?:\/\//i,"");
-      return `https://images.weserv.nl/?url=${encodeURIComponent(noScheme)}&w=${THUMB_PX}&h=${THUMB_PX}&fit=cover&q=70`;
-    } catch { return url; }
+    try { const noScheme = url.replace(/^https?:\/\//i,""); return `https://images.weserv.nl/?url=${encodeURIComponent(noScheme)}&w=${THUMB_PX}&h=${THUMB_PX}&fit=cover&q=70`; }
+    catch { return url; }
   }
 
-  /** ==== Collapse state per tab (persisted) ==== */
-  function loadCollapseState(gid){
-    try { return JSON.parse(localStorage.getItem(`ftt-collapse:${gid}`)) || {}; }
-    catch { return {}; }
-  }
-  function saveCollapseState(gid, map){
-    try { localStorage.setItem(`ftt-collapse:${gid}`, JSON.stringify(map)); }
-    catch {}
-  }
-
-  /** ==== Show Images preference (persisted) ==== */
-  function loadShowImages(){
-    try {
-      const v = localStorage.getItem("ftt-show-images");
-      return v === null ? true : v === "true";
-    } catch { return true; }
-  }
-  function saveShowImages(flag){
-    try { localStorage.setItem("ftt-show-images", String(flag)); } catch {}
-  }
+  /** ==== Persist collapse/show images/sort ==== */
+  function loadCollapseState(gid){ try { return JSON.parse(localStorage.getItem(`ftt-collapse:${gid}`)) || {}; } catch { return {}; } }
+  function saveCollapseState(gid, map){ try { localStorage.setItem(`ftt-collapse:${gid}`, JSON.stringify(map)); } catch {} }
+  function loadShowImages(){ try { const v=localStorage.getItem("ftt-show-images"); return v===null?true:v==="true"; } catch { return true; } }
+  function saveShowImages(flag){ try { localStorage.setItem("ftt-show-images", String(flag)); } catch {} }
+  function persistSort(gid, spec){ try { localStorage.setItem(SORT_KEY_PREFIX + gid, JSON.stringify(spec||null)); } catch {} }
+  function loadSort(gid){ try { const v=localStorage.getItem(SORT_KEY_PREFIX + gid); return v?JSON.parse(v):null; } catch { return null; } }
 
   /** ==== Sorting helpers (within groups) ==== */
   function comparator(colIdx, dir){
+    // Custom comparators per special columns
     const mul = (dir === "desc") ? -1 : 1;
     return (ai, bi) => {
-      const va = (currentRows[ai] && currentRows[ai][colIdx] || "").toString().toLowerCase();
-      const vb = (currentRows[bi] && currentRows[bi][colIdx] || "").toString().toLowerCase();
-      if (va < vb) return -1 * mul;
-      if (va > vb) return  1 * mul;
+      const a = (currentRows[ai] && currentRows[ai][colIdx] || "");
+      const b = (currentRows[bi] && currentRows[bi][colIdx] || "");
+      // PRICE (J)
+      if (colIdx === J_COL_IDX){
+        const ra = priceRank(a), rb = priceRank(b);
+        const aBlank = !a || norm(a).includes("unknown"), bBlank = !b || norm(b).includes("unknown");
+        // blanks/unknown always last
+        if (aBlank && !bBlank) return 1;
+        if (bBlank && !aBlank) return -1;
+        if (ra !== rb) return (ra < rb) ? -1 : 1; // rank asc always
+        const na = extractFirstNumber(a), nb = extractFirstNumber(b);
+        if (na !== nb) return (na < nb ? -1 : 1) * mul; // then by first number (respects dir)
+        const ta = norm(a), tb = norm(b);
+        if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
+      }
+      // VERIFIED (H)
+      if (colIdx === H_COL_IDX){
+        const scamA = norm(a).includes("scam"), scamB = norm(b).includes("scam");
+        if (scamA && !scamB) return 1;
+        if (scamB && !scamA) return -1;
+        const ra = verifiedRank(a), rb = verifiedRank(b);
+        if (ra !== rb) return (ra < rb) ? -1 : 1; // rank asc always
+        const ta = norm(a), tb = norm(b);
+        if (!ta && tb) return 1; if (!tb && ta) return -1; // blanks bottom
+        if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
+      }
+      // EXPERIENCE (I)
+      if (colIdx === I_COL_IDX){
+        const ra = experienceRank(a), rb = experienceRank(b);
+        if (ra !== rb) return (ra < rb) ? -1 : 1; // rank asc always
+        const ta = norm(a), tb = norm(b);
+        if (!ta && tb) return 1; if (!tb && ta) return -1; // blanks bottom
+        if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
+      }
+      // Default: case-insensitive text compare with blanks last
+      const ta = norm(a), tb = norm(b);
+      if (!ta && tb) return 1;
+      if (!tb && ta) return -1;
+      if (ta < tb) return -1 * mul;
+      if (ta > tb) return  1 * mul;
       return 0;
     };
-  }
-
-  function persistSort(gid, spec){
-    try { localStorage.setItem(SORT_KEY_PREFIX + gid, JSON.stringify(spec||null)); } catch {}
-  }
-  function loadSort(gid){
-    try {
-      const v = localStorage.getItem(SORT_KEY_PREFIX + gid);
-      return v ? JSON.parse(v) : null;
-    } catch { return null; }
   }
 
   /** ==== GViz fetch ==== */
@@ -608,10 +500,10 @@
   }
   async function fetchRect(){ return fetchRectFor(GID); }
 
-  /** ==== Column widths ==== */
+  /** ==== Colgroup widths ==== */
   function buildColgroup(){
     colg.innerHTML = "";
-    const widths = [160];
+    const widths = [160]; // image column
     for (let i=0;i<=MAX_SHOW_COL_IDX;i++){
       let w = 150;
       if (i < 3) w = 170;
@@ -625,11 +517,11 @@
     });
   }
 
-  /** ==== Build groups from state headers ==== */
+  /** ==== Grouping ==== */
+  function loadCollapseStateMap(){ return loadCollapseState(GID); }
   function buildGroups(rows){
-    const state = loadCollapseState(GID);
-    const groups = [];
-    let current = null;
+    const state = loadCollapseStateMap();
+    const groups = []; let current = null;
     for (let i=0; i<rows.length; i++){
       const row = rows[i];
       if (isOnlyColAText(row)) {
@@ -643,12 +535,10 @@
     return groups;
   }
   function persistGroups(groups){
-    const map = {};
-    for (const g of groups) map[g.stateName] = g.collapsed;
-    saveCollapseState(GID, map);
+    const map = {}; for (const g of groups) map[g.stateName] = g.collapsed; saveCollapseState(GID, map);
   }
 
-  /** ==== Helpers: global clamp for text cells ==== */
+  /** ==== Cells helpers ==== */
   function makeTextCell(td, text){
     const wrapper = document.createElement("div");
     wrapper.className = "clamp-wrap clamp-3";
@@ -657,8 +547,7 @@
     requestAnimationFrame(()=>{
       if (wrapper.scrollHeight > wrapper.clientHeight + 1) {
         const btn = document.createElement("span");
-        btn.className = "moreless";
-        btn.textContent = " More";
+        btn.className = "moreless"; btn.textContent = " More";
         btn.addEventListener("click", ()=>{
           wrapper.classList.toggle("clamp-3");
           btn.textContent = wrapper.classList.contains("clamp-3") ? " More" : " Less";
@@ -668,15 +557,63 @@
     });
   }
 
-  /** ==== Build image cell on demand (used at render-time AND on expand) ==== */
+  function linkifyWithMore(text, {alwaysShow=false} = {}){
+    const m = text && text.match(URL_RE); if (!m) return null;
+    const url = m[1]; const frag = document.createDocumentFragment();
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = text; a.className = "cell-link";
+    frag.appendChild(a);
+    if (alwaysShow || url.length > 60) {
+      const btn = document.createElement("span"); btn.className = "moreless"; btn.textContent = " More";
+      const wrap = document.createElement("div"); wrap.className = "full-url"; wrap.textContent = url;
+      btn.addEventListener("click", ()=>{
+        const td = btn.parentElement; td.classList.toggle("show-full");
+        btn.textContent = td.classList.contains("show-full") ? " Less" : " More";
+      });
+      frag.appendChild(btn); frag.appendChild(wrap);
+    }
+    return frag;
+  }
+
+  /* Social/phone helpers */
+  function buildTwitterLinkFromHandle(txt){
+    if (!txt) return null; const at = txt.trim(); if (!/^@[\w.]{1,50}$/i.test(at)) return null;
+    const handle = at.slice(1); const a = document.createElement("a");
+    a.href = `https://x.com/${handle}`; a.target = "_blank"; a.rel = "noopener"; a.textContent = at; a.className = "cell-link";
+    return a;
+  }
+  function parseRedditUsername(raw) {
+    if (!raw) return null;
+    let s = String(raw).trim(); s = s.replace(/^@/,'').replace(/^\/?u\//i,''); s = s.split(/\s+/)[0];
+    if (!/^[A-Za-z0-9_]{2,25}$/.test(s)) return null; return s;
+  }
+  function buildRedditLink(raw){
+    const user = parseRedditUsername(raw); if (!user) return null;
+    const a = document.createElement("a");
+    a.href = `https://www.reddit.com/user/${encodeURIComponent(user)}`; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = `u/${user}`; a.className = "cell-link"; return a;
+  }
+  function normalizeDigits(str) { return (str || "").replace(/\D+/g, ""); }
+  function formatUSPhone(digits) {
+    if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    if (digits.length === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
+    return digits;
+  }
+  function buildTelAnchor(raw) {
+    const d = normalizeDigits(raw); if (!d) return null;
+    const a = document.createElement("a");
+    a.href = `tel:${d.length===11 && d[0]==='1' ? '+'+d : (d.length===10 ? '+1'+d : d)}`; a.target = "_self";
+    a.textContent = formatUSPhone(d); a.className = "cell-link"; return a;
+  }
+
+  /** ==== Image cell builder ==== */
   function buildImageCell(tdImg, row, rIdx){
     if (!imgToggle.checked) return;
-    if (tdImg._imgReady) return; // avoid rebuilding
+    if (tdImg._imgReady) return;
     tdImg._imgReady = true;
 
     const cands = imgCandCache.get(rIdx) || imageCandidates(row);
     imgCandCache.set(rIdx, cands);
-
     if (!cands.length) return;
 
     const sk  = document.createElement("div"); sk.className = "skeleton";
@@ -687,46 +624,30 @@
     function tryNext(){
       clearTimer();
       if (i >= cands.length) { sk.remove(); tdImg.textContent = ""; doneOne(); return; }
-      const raw = cands[i++];
-      img._rawSrc = raw;
-      const src = proxify(raw);
-      img.src = "";
-      img.src = src;
+      const raw = cands[i++]; img._rawSrc = raw;
+      const src = proxify(raw); img.src = ""; img.src = src;
       timeoutId = setTimeout(()=>img.onerror && img.onerror(), IMG_TIMEOUT_MS);
     }
     img.onerror = ()=>{ clearTimer(); tryNext(); };
     img.onload  = () => {
       clearTimer();
       if ((img.naturalWidth||0) < 48 || (img.naturalHeight||0) < 48) { tryNext(); return; }
-      cacheSetGoodSrc(row, img._rawSrc || "");
-      sk.remove();
-      doneOne();
+      cacheSetGoodSrc(row, img._rawSrc || ""); sk.remove(); doneOne();
     };
 
-    const starter = ()=>{ tryNext(); };
-    img._startLoading = starter;
-    lazyImgObserver.observe(img);
+    const starter = ()=>{ tryNext(); }; img._startLoading = starter; lazyImgObserver.observe(img);
 
     const landing = preferredLandingUrl(row);
-    if (landing) {
-      const a = document.createElement("a");
-      a.href = landing; a.target = "_blank"; a.rel = "noopener"; a.title = "Open link";
-      a.appendChild(sk); a.appendChild(img);
-      tdImg.appendChild(a);
-    } else {
-      tdImg.appendChild(sk); tdImg.appendChild(img);
-    }
+    if (landing) { const a = document.createElement("a"); a.href = landing; a.target = "_blank"; a.rel = "noopener"; a.title = "Open link"; a.appendChild(sk); a.appendChild(img); tdImg.appendChild(a); }
+    else { tdImg.appendChild(sk); tdImg.appendChild(img); }
   }
 
-  /** ==== Sort handling (header row click → per-group sort) ==== */
+  /** ==== Sort handling (header row click) ==== */
   function setSortBy(colLetter){
     if (!colLetter) { sortSpec = null; persistSort(GID, null); if (currentRows.length) render({ rows: currentRows, colCount: currentColCount }); return; }
     const idx = colLetterToIdx(colLetter);
-    if (!sortSpec || sortSpec.colIdx !== idx) {
-      sortSpec = { colIdx: idx, dir: "asc" };
-    } else {
-      sortSpec.dir = (sortSpec.dir === "asc" ? "desc" : "asc");
-    }
+    if (!sortSpec || sortSpec.colIdx !== idx) sortSpec = { colIdx: idx, dir: "asc" };
+    else sortSpec.dir = (sortSpec.dir === "asc" ? "desc" : "asc");
     persistSort(GID, sortSpec);
     if (currentRows.length) render({ rows: currentRows, colCount: currentColCount });
   }
@@ -739,12 +660,9 @@
 
   /** ==== Render (with per-group sort) ==== */
   function render({ rows, colCount }){
-    currentRows = rows;
-    currentColCount = colCount;
+    currentRows = rows; currentColCount = colCount;
 
-    imgCandCache.clear();
-    buildColgroup();
-    tbody.innerHTML = "";
+    imgCandCache.clear(); buildColgroup(); tbody.innerHTML = "";
     document.body.classList.toggle("hide-images", !imgToggle.checked);
 
     const groups = buildGroups(rows);
@@ -761,7 +679,6 @@
 
     const renderRowByIndex = (rIdx) => {
       const row = rows[rIdx];
-
       if (isOnlyColAText(row)) {
         const g = groupByHeaderIndex.get(rIdx);
         const tr = document.createElement("tr");
@@ -772,8 +689,7 @@
 
         const td = document.createElement("td");
         td.colSpan = 1 + (MAX_SHOW_COL_IDX + 1);
-        const bar = document.createElement("div");
-        bar.className = "state-bar";
+        const bar = document.createElement("div"); bar.className = "state-bar";
         const chev = document.createElement("span"); chev.className = "chev";
         const label = document.createElement("span"); label.textContent = g.stateName;
         bar.appendChild(chev); bar.appendChild(label); td.appendChild(bar); tr.appendChild(td);
@@ -789,7 +705,6 @@
               mtr.setAttribute("data-collapsed","true");
             } else {
               mtr.removeAttribute("data-collapsed");
-              // Build images now that they’re visible
               const idx = parseInt(mtr.getAttribute("data-row-index"), 10);
               const row = currentRows[idx];
               const tdImg = mtr.querySelector("td.imgCol");
@@ -814,49 +729,37 @@
       if (rIdx === 0) tr.classList.add("is-hidden");
       if (rIdx === 1) tr.classList.add("sticky-second");
 
-      if (groupObj) {
-        tr.setAttribute("data-group", groupObj.headerIndex);
-        if (groupObj.collapsed) tr.setAttribute("data-collapsed","true");
-      }
+      if (groupObj) { tr.setAttribute("data-group", groupObj.headerIndex); if (groupObj.collapsed) tr.setAttribute("data-collapsed","true"); }
 
-      // Image cell (click opens E→G)
-      const tdImg = document.createElement("td");
-      tdImg.className = "imgCol";
-
+      // Image cell first
+      const tdImg = document.createElement("td"); tdImg.className = "imgCol";
       const groupIsCollapsed = !!(groupObj && groupObj.collapsed);
-      if (imgToggle.checked && !groupIsCollapsed) {
-        buildImageCell(tdImg, row, rIdx);
-      }
+      if (imgToggle.checked && !groupIsCollapsed) { buildImageCell(tdImg, row, rIdx); }
       tr.appendChild(tdImg);
 
-      // Columns A..S only
+      // Data columns A..S
       for (let c = 0; c <= MAX_SHOW_COL_IDX; c++) {
         const td  = document.createElement("td");
         const txt = row[c] ?? "";
         const lower = (txt||"").toString().trim().toLowerCase();
 
+        // Sticky header row: add clickable sorters
         if (rIdx === 1) {
-          // Pinned header row (sticky-second): make selected columns clickable sorters
           const label = (txt || "").trim();
           if (SORTABLE_HEADERS.has(label)) {
             const colLetter = SORTABLE_HEADERS.get(label);
             const span = document.createElement("span");
             span.className = `hdr-sort ${caretClassFor(colLetter)}`;
             span.title = "Click to sort within each state";
-            const caret = document.createElement("span");
-            caret.className = "sort-caret";
-            span.textContent = label + " ";
-            span.appendChild(caret);
+            const caret = document.createElement("span"); caret.className = "sort-caret";
+            span.textContent = label + " "; span.appendChild(caret);
             span.addEventListener("click", ()=> setSortBy(colLetter));
-            td.appendChild(span);
-            tr.appendChild(td);
-            continue;
+            td.appendChild(span); tr.appendChild(td); continue;
           }
         }
 
         if (c === I_COL_IDX) {
-          const span = document.createElement("span");
-          span.className = "sentiment";
+          const span = document.createElement("span"); span.className = "sentiment";
           if (lower === "positive") { span.textContent = "👍"; span.title = "Positive"; }
           else if (lower === "negative") { span.textContent = "👎"; span.title = "Negative"; }
           else if (lower === "neutral")  { span.textContent = "🤷"; span.title = "Neutral";  }
@@ -865,68 +768,43 @@
         }
         else if (c === G_COL_IDX) {
           const handleLink = buildTwitterLinkFromHandle(txt);
-          if (handleLink) {
-            td.appendChild(handleLink);
-          } else {
+          if (handleLink) td.appendChild(handleLink);
+          else {
             const at = extractTwitterHandleFromUrlish(txt);
             if (at) {
-              const a = document.createElement("a");
-              a.href = `https://x.com/${at.slice(1)}`;
-              a.target = "_blank"; a.rel = "noopener";
-              a.textContent = at;
-              a.className = "cell-link";
+              const a = document.createElement("a"); a.href = `https://x.com/${at.slice(1)}`; a.target = "_blank"; a.rel = "noopener"; a.textContent = at; a.className = "cell-link";
               td.appendChild(a);
             } else {
-              const frag = linkifyWithMore(txt);
-              if (frag) td.appendChild(frag); else makeTextCell(td, txt);
+              const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt);
             }
           }
         }
-        else if (c === E_COL_IDX) {
-          const frag = linkifyWithMore(txt, { alwaysShow: true });
-          if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-        }
-        else if (c === F_COL_IDX) {
-          // Still show F normally (link text), but DO NOT use F for images.
-          const frag = linkifyWithMore(txt, { alwaysShow: true });
-          if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-        }
-        else if (c === P_COL_IDX) {
-          const rl = buildRedditLink(txt);
-          if (rl) td.appendChild(rl);
-          else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
-        }
-        else if (c === Q_COL_IDX) {
-          const tel = buildTelAnchor(txt);
-          if (tel) td.appendChild(tel);
-          else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
-        }
-        else {
-          const frag = linkifyWithMore(txt);
-          if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-        }
+        else if (c === E_COL_IDX) { const frag = linkifyWithMore(txt, { alwaysShow: true }); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
+        else if (c === F_COL_IDX) { const frag = linkifyWithMore(txt, { alwaysShow: true }); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
+        else if (c === P_COL_IDX) { const rl = buildRedditLink(txt); if (rl) td.appendChild(rl); else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); } }
+        else if (c === Q_COL_IDX) { const tel = buildTelAnchor(txt); if (tel) td.appendChild(tel); else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); } }
+        else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
+
         tr.appendChild(td);
       }
 
       tbody.appendChild(tr);
     }
 
-    // Walk rows and render (headers + members) in order
+    // Walk rows and render
     for (let i=0; i<rows.length && i<ROW_CAP; i++){
       const row = rows[i];
       if (isOnlyColAText(row)) {
         renderRowByIndex(i);
         const g = groups.find(x => x.headerIndex === i);
-        if (g && g.members.length) {
-          i = g.members[g.members.length - 1];
-        }
+        if (g && g.members.length) i = g.members[g.members.length - 1];
       } else {
         const inGroup = groups.find(g => g.members.includes(i));
         if (!inGroup) renderRowByIndex(i);
       }
     }
 
-    // Expand/Collapse All (persist)
+    // Expand/Collapse All
     expandAllBtn.onclick = () => {
       groups.forEach(g => g.collapsed = false);
       persistGroups(groups);
@@ -947,10 +825,9 @@
       tbody.querySelectorAll('tr[data-group]').forEach(tr => tr.setAttribute("data-collapsed","true"));
     };
 
-    // Meta
     meta.textContent = `src=gviz • gid=${GID} • rows: ${rows.length} (showing ${Math.min(rows.length, ROW_CAP)}) • cols: ${colCount} • ${new Date().toLocaleTimeString()}`;
 
-    // ---- Restore scroll position after render ----
+    // Restore scroll
     restoreScrollFor(GID);
   }
 
@@ -982,54 +859,36 @@
   }
   const debouncedSearch = debounce(()=>applySearch(searchBox.value), 150);
 
-  /** ==== Export helpers kept (buttons removed from header UI, but leaving functions available) ==== */
-  // If you want them back in UI, add buttons and call these.
-
+  /** ==== Export all tabs CSV (kept) ==== */
   async function exportAllTabsCSV(){
     const header = ["Region", ...COL_HEADERS.slice(0, MAX_SHOW_COL_IDX + 1)];
     const out = [header];
-
     for (const tab of TABS) {
       try {
         const pack = await fetchRectFor(tab.gid);
         const rows = pack.rows || [];
         for (let i=0; i<rows.length; i++){
-          const r = rows[i];
-          if (!r) continue;
+          const r = rows[i]; if (!r) continue;
           if (isOnlyColAText(r)) continue;
-          if (i === 0) continue; // often metadata row
+          if (i === 0) continue;
           const slice = r.slice(0, MAX_SHOW_COL_IDX + 1);
           out.push([tab.name, ...slice]);
         }
-      } catch (e){
-        console.error("Export tab failed", tab, e);
-      }
+      } catch (e){ console.error("Export tab failed", tab, e); }
     }
-
     const ts = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
     const name = `ftt-big-list_ALL-TABS_${ts}.csv`;
     downloadCSV(name, out);
   }
 
-  /** ==== Scroll & sort persistence ==== */
-  function saveScrollFor(gid, top){
-    try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {}
-  }
-  function loadScrollFor(gid){
-    try {
-      const v = localStorage.getItem(SCROLL_KEY_PREFIX + gid);
-      return v ? parseInt(v, 10) || 0 : 0;
-    } catch { return 0; }
-  }
-  const debouncedSaveScroll = debounce(()=>{
-    saveScrollFor(GID, scrollWrap.scrollTop || 0);
-  }, 120);
+  /** ==== Scroll persistence ==== */
+  function saveScrollFor(gid, top){ try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {} }
+  function loadScrollFor(gid){ try { const v = localStorage.getItem(SCROLL_KEY_PREFIX + gid); return v ? parseInt(v, 10) || 0 : 0; } catch { return 0; } }
+  const debouncedSaveScroll = debounce(()=>{ saveScrollFor(GID, scrollWrap.scrollTop || 0); }, 120);
 
   /** ==== Load + poll ==== */
   async function load(){
-    // save current scroll before reloading (so refresh during same tab keeps place)
     saveScrollFor(GID, scrollWrap.scrollTop || 0);
-
     meta.textContent = "loading…";
     try {
       const pack = await fetchRect();
@@ -1047,27 +906,21 @@
   // Tab buttons
   $$(".button-row .btn").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
-      // persist outgoing tab scroll
       saveScrollFor(GID, scrollWrap.scrollTop || 0);
-
       $$(".button-row .btn").forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
       GID = btn.dataset.gid;
-
-      // remember last tab
       try { localStorage.setItem(ACTIVE_GID_KEY, GID); } catch {}
-
-      // load remembered sort for this tab
       sortSpec = loadSort(GID);
-
-      await load(); // render() will call restoreScrollFor(GID)
+      await load();
       if (lastQuery) applySearch(lastQuery);
     });
   });
 
-  // Track scrolling to save position
+  // Scroll save
   scrollWrap.addEventListener("scroll", debouncedSaveScroll);
 
+  // Image toggle (no colgroup shrinking now, only hide .imgCol)
   imgToggle.addEventListener("change", ()=>{
     saveShowImages(imgToggle.checked);
     if (currentRows.length) {
@@ -1077,28 +930,20 @@
     }
   });
 
-  // Reset sorting link
+  // Reset sort
   resetSortBtn.addEventListener("click", ()=>{
-    sortSpec = null;
-    persistSort(GID, null);
-    if (currentRows.length) {
-      const prevTop = scrollWrap.scrollTop || 0;
-      render({ rows: currentRows, colCount: currentColCount });
-      scrollWrap.scrollTop = prevTop;
-    }
+    sortSpec = null; persistSort(GID, null);
+    if (currentRows.length) { const prevTop = scrollWrap.scrollTop || 0; render({ rows: currentRows, colCount: currentColCount }); scrollWrap.scrollTop = prevTop; }
   });
 
   /** ==== Restore scroll after render ==== */
   function restoreScrollFor(gid){
     const targetTop = loadScrollFor(gid);
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      scrollWrap.scrollTop = targetTop;
-    }));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ scrollWrap.scrollTop = targetTop; }));
   }
 
   /** ==== Boot ==== */
   (async function boot(){
-    // restore last-tab if available
     try {
       const stored = localStorage.getItem(ACTIVE_GID_KEY);
       if (stored && $(`.button-row .btn[data-gid="${stored}"]`)) {
@@ -1106,16 +951,14 @@
         $$(".button-row .btn").forEach(b=>b.classList.toggle("active", b.dataset.gid === GID));
       }
     } catch {}
-    // restore image toggle
     const v = localStorage.getItem("ftt-show-images");
     const showImages = (v === null ? true : v === "true");
     imgToggle.checked = showImages;
     document.body.classList.toggle("hide-images", !showImages);
 
-    // load remembered sort for this tab (if any)
     sortSpec = loadSort(GID);
 
-    await load();   // render + restoreScrollFor(GID)
+    await load();
     startPolling();
   })();
   </script>

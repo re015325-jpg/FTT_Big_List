@@ -95,7 +95,7 @@
     .expanded .chev { transform: rotate(90deg); }
     tr[data-collapsed="true"] { display: none; }
 
-    /* Image column + hiding (do NOT hide colgroup width anymore) */
+    /* Image column + hiding */
     .imgCol { width: 160px; }
     .thumb  { width: 120px; height: 120px; border-radius:12px; border:1px solid #ececec; object-fit:cover; display:block; background:#f1f1f1; }
     .skeleton { width: 120px; height: 120px; background:linear-gradient(90deg,#eee,#f5f5f5,#eee); background-size:200% 100%; animation:shimmer 1s linear infinite; border-radius:12px; border:1px solid #ececec; }
@@ -194,7 +194,7 @@
   const IMAGE_PREF_COL_LETTER = "V";
   const IMAGE_PREF_COL_IDX = colLetterToIdx(IMAGE_PREF_COL_LETTER);
 
-  /* Column indexes (A=0): E=4, F=5, G=6, H=7, I=8, J=9, P=15, Q=16 */
+  /* Column indexes (A=0) */
   const A_COL_IDX = 0, B_COL_IDX = 1;
   const E_COL_IDX = 4, F_COL_IDX = 5, G_COL_IDX = 6, H_COL_IDX = 7, I_COL_IDX = 8, J_COL_IDX = 9, P_COL_IDX = 15, Q_COL_IDX = 16;
 
@@ -242,6 +242,7 @@
   let sortSpec = null; // { colIdx, dir: 'asc'|'desc' }
   let lastQuery = "";
   let imgCandCache = new Map();
+  let rowTextIndex = new Map(); // rIdx -> lowercased full text for searching
 
   /** ==== Concurrency limiter for images ==== */
   let inflight = 0;
@@ -294,42 +295,39 @@
     const hasMid = t.includes("mid");
     const hasHighMid = t.includes("high mid") || t.includes("high-mid") || t.includes("mid high") || t.includes("mid-high");
     const hasHigh = t.includes("high");
-
-    // Priority: low -> low+mid -> mid -> high mid -> high -> other text
     if (hasLow && !hasMid) return 0;
     if (hasLow && hasMid)  return 1;
     if (!hasLow && hasMid && !hasHighMid) return 2;
     if (hasHighMid) return 3;
     if (hasHigh) return 4;
-    return 5; // other/uncategorized text with content
+    return 5;
   }
 
   /* Verified ranking */
   function verifiedRank(s){
     const t = norm(s);
-    if (!t) return 9; // blank bottom
-    if (t.includes("scam")) return 8; // scam/scammer right above blank
+    if (!t) return 9;
+    if (t.includes("scam")) return 8;
     if (t.includes("admin verified")) return 0;
     if (t.includes("reddit verified")) return 1;
     if (t.includes("fetlife verified")) return 2;
-    // plain "verified" (but not the above specifics)
     if (/\bverified\b/.test(t)) return 3;
     if (t.includes("seems legit")) return 4;
     if (t.includes("needs verification")) return 5;
     if (t.includes("mixed")) return 6;
-    return 7; // anything else with content
+    return 7;
   }
 
   /* Experience ranking */
   function experienceRank(s){
     const t = norm(s);
-    if (!t) return 6; // blank last
+    if (!t) return 6;
     if (t.includes("positive")) return 0;
     if (t.includes("neutral"))  return 1;
     if (t.includes("mixed"))    return 2;
     if (t.includes("needs review")) return 3;
     if (t.includes("negative")) return 4;
-    return 5; // anything else with content
+    return 5;
   }
 
   /* Basic helpers */
@@ -348,7 +346,7 @@
   function cacheGetGoodSrc(row){ try { return localStorage.getItem(imageCacheKey(row)) || ""; } catch { return ""; } }
   function cacheSetGoodSrc(row, rawUrl){ try { localStorage.setItem(imageCacheKey(row), rawUrl); } catch {} }
 
-  /* Twitter profile image candidates (strict, no favicon) */
+  /* Twitter/avatar helpers */
   function extractDomain(url) { try { return new URL(url).hostname; } catch { return ""; } }
   function isTwitterDomain(host){ return /(^|\.)x\.com$/.test(host) || /(^|\.)twitter\.com$/.test(host); }
   function unavatarForDomain(domain) { return domain ? `https://unavatar.io/${encodeURIComponent(domain)}?fallback=false` : ""; }
@@ -385,7 +383,6 @@
   /* Image candidates */
   function imageCandidates(row){
     const cached = cacheGetGoodSrc(row); const out = []; if (cached) out.push(cached);
-    // V
     if (IMAGE_PREF_COL_IDX >= 0 && IMAGE_PREF_COL_IDX < row.length) {
       const vtxt = row[IMAGE_PREF_COL_IDX] || ""; const vm = vtxt.match(URL_RE);
       if (vm) {
@@ -397,18 +394,15 @@
         }
       }
     }
-    // G strict + general
-    const gStrict = unavatarForTwitterHandleStrict(row[G_COL_IDX]) .concat(unavatarForTwitterHandleStrict(extractTwitterHandleFromUrlish(row[G_COL_IDX])));
+    const gStrict = unavatarForTwitterHandleStrict(row[G_COL_IDX])
+      .concat(unavatarForTwitterHandleStrict(extractTwitterHandleFromUrlish(row[G_COL_IDX])));
     if (gStrict.length) out.push(...gStrict);
     const gGen = unavatarForUrlishSkippingTwitter(row[G_COL_IDX]) || faviconForUrlishSkippingTwitter(row[G_COL_IDX]); if (gGen) out.push(gGen);
-    // E general
     const eGen = unavatarForUrlishSkippingTwitter(row[E_COL_IDX]) || faviconForUrlishSkippingTwitter(row[E_COL_IDX]); if (eGen) out.push(eGen);
-    // Final scan
     for (const cell of row) {
       if (!cell) continue; const m = cell.match(URL_RE); if (!m) continue;
       const url = m[1]; if (IMG_EXT_RE.test(url) || IMG_HOST_HINT.test(url)) out.push(url);
     }
-    // dedupe
     const seen = new Set(); return out.filter(u => { if (seen.has(u)) return false; seen.add(u); return true; });
   }
   function proxify(url){
@@ -426,44 +420,38 @@
 
   /** ==== Sorting helpers (within groups) ==== */
   function comparator(colIdx, dir){
-    // Custom comparators per special columns
     const mul = (dir === "desc") ? -1 : 1;
     return (ai, bi) => {
       const a = (currentRows[ai] && currentRows[ai][colIdx] || "");
       const b = (currentRows[bi] && currentRows[bi][colIdx] || "");
-      // PRICE (J)
       if (colIdx === J_COL_IDX){
         const ra = priceRank(a), rb = priceRank(b);
         const aBlank = !a || norm(a).includes("unknown"), bBlank = !b || norm(b).includes("unknown");
-        // blanks/unknown always last
         if (aBlank && !bBlank) return 1;
         if (bBlank && !aBlank) return -1;
-        if (ra !== rb) return (ra < rb) ? -1 : 1; // rank asc always
+        if (ra !== rb) return (ra < rb) ? -1 : 1; // keep rank asc
         const na = extractFirstNumber(a), nb = extractFirstNumber(b);
-        if (na !== nb) return (na < nb ? -1 : 1) * mul; // then by first number (respects dir)
+        if (na !== nb) return (na < nb ? -1 : 1) * mul;
         const ta = norm(a), tb = norm(b);
         if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
       }
-      // VERIFIED (H)
       if (colIdx === H_COL_IDX){
         const scamA = norm(a).includes("scam"), scamB = norm(b).includes("scam");
         if (scamA && !scamB) return 1;
         if (scamB && !scamA) return -1;
         const ra = verifiedRank(a), rb = verifiedRank(b);
-        if (ra !== rb) return (ra < rb) ? -1 : 1; // rank asc always
+        if (ra !== rb) return (ra < rb) ? -1 : 1;
         const ta = norm(a), tb = norm(b);
-        if (!ta && tb) return 1; if (!tb && ta) return -1; // blanks bottom
+        if (!ta && tb) return 1; if (!tb && ta) return -1;
         if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
       }
-      // EXPERIENCE (I)
       if (colIdx === I_COL_IDX){
         const ra = experienceRank(a), rb = experienceRank(b);
-        if (ra !== rb) return (ra < rb) ? -1 : 1; // rank asc always
+        if (ra !== rb) return (ra < rb) ? -1 : 1;
         const ta = norm(a), tb = norm(b);
-        if (!ta && tb) return 1; if (!tb && ta) return -1; // blanks bottom
+        if (!ta && tb) return 1; if (!tb && ta) return -1;
         if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
       }
-      // Default: case-insensitive text compare with blanks last
       const ta = norm(a), tb = norm(b);
       if (!ta && tb) return 1;
       if (!tb && ta) return -1;
@@ -556,7 +544,6 @@
       }
     });
   }
-
   function linkifyWithMore(text, {alwaysShow=false} = {}){
     const m = text && text.match(URL_RE); if (!m) return null;
     const url = m[1]; const frag = document.createDocumentFragment();
@@ -574,8 +561,6 @@
     }
     return frag;
   }
-
-  /* Social/phone helpers */
   function buildTwitterLinkFromHandle(txt){
     if (!txt) return null; const at = txt.trim(); if (!/^@[\w.]{1,50}$/i.test(at)) return null;
     const handle = at.slice(1); const a = document.createElement("a");
@@ -583,8 +568,7 @@
     return a;
   }
   function parseRedditUsername(raw) {
-    if (!raw) return null;
-    let s = String(raw).trim(); s = s.replace(/^@/,'').replace(/^\/?u\//i,''); s = s.split(/\s+/)[0];
+    if (!raw) return null; let s = String(raw).trim(); s = s.replace(/^@/,'').replace(/^\/?u\//i,''); s = s.split(/\s+/)[0];
     if (!/^[A-Za-z0-9_]{2,25}$/.test(s)) return null; return s;
   }
   function buildRedditLink(raw){
@@ -638,8 +622,13 @@
     const starter = ()=>{ tryNext(); }; img._startLoading = starter; lazyImgObserver.observe(img);
 
     const landing = preferredLandingUrl(row);
-    if (landing) { const a = document.createElement("a"); a.href = landing; a.target = "_blank"; a.rel = "noopener"; a.title = "Open link"; a.appendChild(sk); a.appendChild(img); tdImg.appendChild(a); }
-    else { tdImg.appendChild(sk); tdImg.appendChild(img); }
+    if (landing) {
+      const a = document.createElement("a");
+      a.href = landing; a.target = "_blank"; a.rel = "noopener"; a.title = "Open link";
+      a.appendChild(sk); a.appendChild(img); tdImg.appendChild(a);
+    } else {
+      tdImg.appendChild(sk); tdImg.appendChild(img);
+    }
   }
 
   /** ==== Sort handling (header row click) ==== */
@@ -804,6 +793,16 @@
       }
     }
 
+    // Build search index for visible data rows
+    rowTextIndex.clear();
+    tbody.querySelectorAll('tr[data-row-index]').forEach(tr=>{
+      const idx = parseInt(tr.getAttribute('data-row-index'), 10);
+      const row = currentRows[idx] || [];
+      // concatenate A..S
+      const txt = row.slice(0, MAX_SHOW_COL_IDX + 1).join(" ").toLowerCase();
+      rowTextIndex.set(idx, txt);
+    });
+
     // Expand/Collapse All
     expandAllBtn.onclick = () => {
       groups.forEach(g => g.collapsed = false);
@@ -831,55 +830,40 @@
     restoreScrollFor(GID);
   }
 
-  /** ==== Search (debounced) ==== */
+  /** ==== Search (debounced, index-backed) ==== */
   function applySearch(q, fromRender=false){
     lastQuery = (q || "").trim().toLowerCase();
+    const isActive = !!lastQuery;
 
-    const headers = tbody.querySelectorAll("tr.state-header");
-    if (lastQuery) {
-      headers.forEach(h => h.classList.add("expanded"));
+    const headerRows = tbody.querySelectorAll("tr.state-header");
+    const dataRows   = tbody.querySelectorAll('tr[data-row-index]');
+
+    if (isActive) {
+      // Expand all groups so matches are visible
+      headerRows.forEach(h => h.classList.add("expanded"));
       tbody.querySelectorAll("tr[data-group]").forEach(tr => tr.removeAttribute("data-collapsed"));
-      const rows = tbody.querySelectorAll("tr");
+
       let shown = 0;
-      rows.forEach(tr => {
-        if (tr.classList.contains("state-header")) { tr.classList.remove("search-row-hide"); return; }
-        if (tr.classList.contains("is-hidden")) { tr.classList.add("search-row-hide"); return; }
-        const text = tr.textContent.toLowerCase();
-        const match = text.includes(lastQuery);
+      dataRows.forEach(tr=>{
+        const idx = parseInt(tr.getAttribute("data-row-index"),10);
+        const hay = rowTextIndex.get(idx) || "";
+        const match = hay.includes(lastQuery);
         tr.classList.toggle("search-row-hide", !match);
         if (match) shown++;
       });
+      // Always show the sticky header + first meta row
+      tbody.querySelectorAll("tr.is-hidden").forEach(tr => tr.classList.add("search-row-hide"));
+
       meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
       meta.textContent += ` • matches: ${shown}`;
     } else {
+      // Clear search: show everything and re-render to restore group collapse states
       tbody.querySelectorAll("tr").forEach(tr => tr.classList.remove("search-row-hide"));
       if (!fromRender && currentRows.length) render({ rows: currentRows, colCount: currentColCount });
       meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
     }
   }
-  const debouncedSearch = debounce(()=>applySearch(searchBox.value), 150);
-
-  /** ==== Export all tabs CSV (kept) ==== */
-  async function exportAllTabsCSV(){
-    const header = ["Region", ...COL_HEADERS.slice(0, MAX_SHOW_COL_IDX + 1)];
-    const out = [header];
-    for (const tab of TABS) {
-      try {
-        const pack = await fetchRectFor(tab.gid);
-        const rows = pack.rows || [];
-        for (let i=0; i<rows.length; i++){
-          const r = rows[i]; if (!r) continue;
-          if (isOnlyColAText(r)) continue;
-          if (i === 0) continue;
-          const slice = r.slice(0, MAX_SHOW_COL_IDX + 1);
-          out.push([tab.name, ...slice]);
-        }
-      } catch (e){ console.error("Export tab failed", tab, e); }
-    }
-    const ts = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
-    const name = `ftt-big-list_ALL-TABS_${ts}.csv`;
-    downloadCSV(name, out);
-  }
+  const debouncedSearch = debounce(()=>applySearch(searchBox.value), 120);
 
   /** ==== Scroll persistence ==== */
   function saveScrollFor(gid, top){ try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {} }
@@ -915,6 +899,14 @@
       await load();
       if (lastQuery) applySearch(lastQuery);
     });
+  });
+
+  // Search events
+  searchBox.addEventListener("input", debouncedSearch);
+  clearSearchBtn.addEventListener("click", ()=>{
+    searchBox.value = "";
+    applySearch("");
+    searchBox.focus();
   });
 
   // Scroll save

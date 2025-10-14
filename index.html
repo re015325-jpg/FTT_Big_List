@@ -16,45 +16,62 @@
   <style>
     * { box-sizing: border-box; }
     html, body { height: 100%; }
+    :root{
+      --brand:#0078d7;
+      --brand-2:#0a7ea4;
+      --bg:#f4f7fa;
+      --panel:#fff;
+      --text:#222;
+      --muted:#6b7787;
+      --line:#e9eef4;
+      --line-2:#e0e6ee;
+      --chip:#ffffff22;
+      --badge:#eef3f9;
+      --state:#000;
+      --accent:#0063b1;
+    }
     body {
-      margin: 0; background: #f4f7fa; color: #222;
+      margin: 0; background: var(--bg); color: var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       display: flex; flex-direction: column;
     }
 
-    header { display: grid; gap: 6px; padding: 6px 10px; background: #0078d7; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.10); }
+    /* Header / controls */
+    header { display: grid; gap: 8px; padding: 10px 12px; background: var(--brand); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
     header .top { display:flex; gap:12px; align-items:center; }
-    h1 { margin:0; font-size:14px; font-weight:750; line-height:1.1; }
-    .meta { margin-left:auto; font-size:12px; opacity:.95; }
+    h1 { margin:0; font-size:15px; font-weight:800; line-height:1.1; letter-spacing:.2px; }
+    .meta { margin-left:auto; font-size:12px; opacity:.95; background: #ffffff1a; padding:4px 8px; border-radius:8px; }
 
+    /* Tabs row */
     .button-row { display:flex; flex-wrap:wrap; gap:6px; }
-    .btn { color:#fff; background:#0063b1; border:0; border-radius:8px; padding:.35rem .6rem; font-weight:700; font-size:13px; cursor:pointer; }
+    .btn { color:#fff; background:#0063b1; border:0; border-radius:10px; padding:.40rem .65rem; font-weight:700; font-size:13px; cursor:pointer; transition:transform .05s ease, filter .2s ease; }
+    .btn:active{ transform: translateY(1px); }
     .btn.us{background:#0078d7}.btn.canada{background:#d83b01}.btn.samerica{background:#107c10}
     .btn.europe{background:#6b46c1}.btn.eastasia{background:#e81123}.btn.mideast{background:#ffb900;color:#333}
-    .btn.active{outline:2px solid #fff; outline-offset:1px; filter:brightness(1.05)}
+    .btn.active{outline:2px solid #fff; outline-offset:1px; filter:brightness(1.06)}
 
+    /* Top controls */
     .controls {
       display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; justify-content:flex-start;
     }
-    .controls .switch { display:flex; align-items:center; gap:6px; background:#ffffff22; padding:3px 8px; border-radius:8px; }
     .controls input[type="search"]{
-      padding:6px 8px; border-radius:8px; border:1px solid #c8d7eb; min-width:240px;
-      outline: none;
+      padding:8px 10px; border-radius:10px; border:1px solid #c8d7eb; min-width:260px; outline: none; background:#fff;
     }
-    .controls select, .controls button {
-      font-size:12px; padding:3px 8px; border-radius:6px; border:none;
+    .controls .btn-plain, .controls .btn {
+      font-size:12px; padding:.45rem .65rem; border-radius:10px; border:none;
     }
     .controls .btn-plain { background:#ffffff22; color:#fff; }
+    .switch { display:flex; align-items:center; gap:8px; background:#ffffff22; padding:6px 10px; border-radius:10px; }
 
+    /* Main / table */
     main { display:flex; flex-direction:column; }
-    .table-wrap { height: calc(100vh - 142px); overflow:auto; background:#fff; border-top:1px solid #e9eef4; border-bottom:1px solid #e9eef4; }
+    .table-wrap { height: calc(100vh - 168px); overflow:auto; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 
-    /* Table */
     table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 14px; min-width: 2200px; }
     tbody td {
       border-bottom:1px solid #f0f3f6; padding:8px 10px; vertical-align: top;
       white-space: normal; overflow-wrap: break-word; word-break: normal; hyphens: manual; line-height:1.35;
-      background: #fff;
+      background: var(--panel);
     }
     tbody tr:nth-child(2n){ background:#fafcff; }
 
@@ -63,17 +80,27 @@
     tbody tr.sticky-second td {
       position: sticky; top: 0; z-index: 4;
       background: linear-gradient(#f7fafc, #eef3f9);
-      border-bottom: 2px solid #e0e6ee;
+      border-bottom: 2px solid var(--line-2);
     }
+
+    /* Sortable cells on the pinned header row (row 2) */
+    .sticky-second .hdr-sort {
+      display:inline-flex; align-items:center; gap:6px; font-weight:800; cursor:pointer; user-select:none; padding:2px 4px; border-radius:8px;
+    }
+    .sticky-second .hdr-sort:hover { background:#e9eef7; }
+    .sort-caret{ font-size:12px; opacity:.75; }
+    .sorted-asc .sort-caret::after{ content:"▲"; }
+    .sorted-desc .sort-caret::after{ content:"▼"; }
+    .sorted-none .sort-caret::after{ content:"↕"; opacity:.5; }
 
     /* State header row */
     tr.state-header > td {
-      background: #000 !important; color:#fff !important;
-      font-weight: 700; letter-spacing: .2px;
+      background: var(--state) !important; color:#fff !important;
+      font-weight: 800; letter-spacing: .2px;
       border-bottom: 2px solid #111;
       position: sticky; top: 40px; z-index: 3;
     }
-    tr.state-header .state-bar { display:flex; align-items:center; gap:10px; cursor: pointer; }
+    tr.state-header .state-bar { display:flex; align-items:center; gap:10px; cursor: pointer; padding:6px 0; }
     .chev {
       width: 0; height: 0;
       border-left: 6px solid currentColor;
@@ -86,8 +113,9 @@
 
     /* Image column + hiding */
     .imgCol { width: 160px; }
-    .thumb  { width: 120px; height: 120px; border-radius:10px; border:1px solid #ececec; object-fit:cover; display:block; background:#f1f1f1; }
-    .skeleton { width: 120px; height: 120px; background:#e6e6e6; border-radius:10px; border:1px solid #ececec; }
+    .thumb  { width: 120px; height: 120px; border-radius:12px; border:1px solid #ececec; object-fit:cover; display:block; background:#f1f1f1; }
+    .skeleton { width: 120px; height: 120px; background:linear-gradient(90deg,#eee,#f5f5f5,#eee); background-size:200% 100%; animation:shimmer 1s linear infinite; border-radius:12px; border:1px solid #ececec; }
+    @keyframes shimmer{0%{background-position:0% 0}100%{background-position:200% 0}}
     .hide-images col:first-child { width:0 !important; }
     .hide-images .imgCol { display:none; }
 
@@ -97,20 +125,25 @@
     .full-url {
       display:none; margin-top:6px; font-size:12px; color:#333;
       word-break: break-all; white-space: normal;
-      background:#f6f8fb; border:1px solid #e5ebf3; border-radius:6px; padding:6px;
+      background:#f6f8fb; border:1px solid #e5ebf3; border-radius:8px; padding:6px;
     }
     .show-full .full-url { display:block; }
 
     /* Global text clamp + More/Less */
     .clamp-wrap { display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
     .clamp-3 { -webkit-line-clamp:3; }
-    .moreless { display:inline-block; margin-top:6px; font-size:12px; color:#0063b1; cursor:pointer; user-select:none; }
+    .moreless { display:inline-block; margin-top:6px; font-size:12px; color:var(--accent); cursor:pointer; user-select:none; }
 
     /* Search hide */
     .search-row-hide { display: none !important; }
 
     /* Tiny icon cells (Column I) */
     .sentiment { font-size:18px; line-height:1; }
+
+    /* Mini footer actions */
+    .footer-actions{ padding:8px 12px; display:flex; gap:8px; align-items:center; color:#4b5563; font-size:12px;}
+    .chip{ background:#eef2f7; border:1px solid #e5ebf3; padding:4px 8px; border-radius:999px; }
+    .linkish{ color:#0a5a7a; cursor:pointer; text-decoration:underline; }
   </style>
 </head>
 <body>
@@ -140,25 +173,7 @@
 
       <button id="expandAll" class="btn" style="background:#3aa655">Expand all</button>
       <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
-
-      <span style="margin-left:8px">Sort within state by</span>
-      <select id="sortCol" aria-label="Sort column">
-        <option value="">— None —</option>
-        <option value="A">Location</option>
-        <option value="C">Domme</option>
-        <option value="H">Verified?</option>
-        <option value="I">Experience?</option>
-        <option value="J">Price range?</option>
-      </select>
-      <select id="sortDir" aria-label="Sort direction">
-        <option value="asc">Asc</option>
-        <option value="desc">Desc</option>
-      </select>
-      <button id="applySort" class="btn-plain">Apply</button>
-      <button id="clearSort" class="btn-plain">Clear</button>
-
-      <button id="exportCsv" class="btn" style="background:#0a7ea4">Export CSV (current view)</button>
-      <button id="exportAllCsv" class="btn" style="background:#0a5a7a">Export CSV (all tabs)</button>
+      <span class="chip">Tip: click a column name in the pinned header row to sort within each state.</span>
     </div>
   </header>
 
@@ -168,6 +183,9 @@
         <colgroup id="colg"></colgroup>
         <tbody id="tbody"></tbody>
       </table>
+    </div>
+    <div class="footer-actions">
+      <span class="linkish" id="resetSort">Reset sorting</span>
     </div>
   </main>
 
@@ -179,7 +197,7 @@
   const MAX_SHOW_COL_LETTER = "S";
   const MAX_SHOW_COL_IDX = colLetterToIdx(MAX_SHOW_COL_LETTER);
 
-  /* Tabs for all-tabs export */
+  /* Tabs for all-tabs export (kept for CSV-all) */
   const TABS = [
     { name: "United States", gid: "0" },
     { name: "Canada", gid: "918890863" },
@@ -189,9 +207,10 @@
     { name: "Middle East", gid: "1604960979" },
   ];
 
-  /* Remember-last-tab + per-tab scroll keys */
+  /* Remember-last-tab + per-tab scroll keys + sort persist */
   const ACTIVE_GID_KEY = "ftt-active-gid";
   const SCROLL_KEY_PREFIX = "ftt-scroll:"; // + GID
+  const SORT_KEY_PREFIX   = "ftt-sort:";   // + GID
 
   /* Wider columns */
   const WIDE_COLS = ["K","R"];
@@ -204,6 +223,15 @@
   /* Column indexes (A=0): E=4, F=5, G=6, H=7, I=8, J=9, P=15, Q=16 */
   const E_COL_IDX = 4, F_COL_IDX = 5, G_COL_IDX = 6, H_COL_IDX = 7, I_COL_IDX = 8, J_COL_IDX = 9, P_COL_IDX = 15, Q_COL_IDX = 16;
 
+  /* Sortable header labels we’ll recognize on the sticky header row */
+  const SORTABLE_HEADERS = new Map([
+    ["Location","A"],
+    ["Domme","C"],
+    ["Verified?","H"],
+    ["Experience?","I"],
+    ["Price range?","J"],
+  ]);
+
   let POLL_MS = 120000;
   let ROW_CAP = 2000;
   const THUMB_PX = 120;
@@ -212,7 +240,7 @@
   const IMG_TIMEOUT_MS = 3000;
   const LAZY_ROOT_MARGIN = '1200px 0px';
 
-  /* Column headers A..S */
+  /* Column headers A..S (for CSV output) */
   const COL_HEADERS = [
     "Location","Alternative Location","Domme","Images/Aliases","Website","Link tree/All links",
     "X/BlueSky","Verified?","Experience?","Price range?","Review/notes","Renown",
@@ -228,19 +256,15 @@
   const imgToggle = $("#imgToggle");
   const expandAllBtn = $("#expandAll");
   const collapseAllBtn = $("#collapseAll");
-  const sortColSel = $("#sortCol");
-  const sortDirSel = $("#sortDir");
-  const applySortBtn = $("#applySort");
-  const clearSortBtn = $("#clearSort");
   const searchBox = $("#searchBox");
   const clearSearchBtn = $("#clearSearch");
-  const exportBtn = $("#exportCsv");
-  const exportAllBtn = $("#exportAllCsv");
+  const resetSortBtn = $("#resetSort");
   const scrollWrap = $("#scrollWrap");
 
   /** ==== State ==== */
   let currentRows = [];
   let currentColCount = 0;
+  // sortSpec = { colIdx: number, dir: "asc" | "desc" }
   let sortSpec = null;
   let lastQuery = "";
   let imgCandCache = new Map();
@@ -547,68 +571,45 @@
     };
   }
 
-  /** ==== GViz JSONP fetch (CORS-safe for GitHub Pages) ==== */
+  function persistSort(gid, spec){
+    try { localStorage.setItem(SORT_KEY_PREFIX + gid, JSON.stringify(spec||null)); } catch {}
+  }
+  function loadSort(gid){
+    try {
+      const v = localStorage.getItem(SORT_KEY_PREFIX + gid);
+      return v ? JSON.parse(v) : null;
+    } catch { return null; }
+  }
+
+  /** ==== GViz fetch ==== */
   function gvizURL(fileId, gid, range){
     const u = new URL(`https://docs.google.com/spreadsheets/d/${fileId}/gviz/tq`);
     u.searchParams.set("gid", gid);
     u.searchParams.set("range", range);
-    u.searchParams.set("tqx", "out:json"); // JSONP-style JS wrapper
+    u.searchParams.set("tqx", "out:json");
     u.searchParams.set("_", Date.now());
     return u.toString();
   }
-
-  function fetchRectFor_JSONP(gid){
-    return new Promise((resolve, reject) => {
-      // Stash any existing handler; restore after we get our response
-      const g = (window.google = window.google || {});
-      g.visualization = g.visualization || {};
-      g.visualization.Query = g.visualization.Query || {};
-      const prev = g.visualization.Query.setResponse;
-
-      let cleaned = false;
-      function cleanup(){
-        if (cleaned) return;
-        cleaned = true;
-        // restore previous handler (if any)
-        g.visualization.Query.setResponse = prev || function(){};
-        if (script && script.parentNode) script.parentNode.removeChild(script);
-      }
-
-      g.visualization.Query.setResponse = function(resp){
-        try {
-          cleanup();
-          resolve(resp);
-        } catch (e) {
-          reject(e);
-        }
-      };
-
-      const script = document.createElement("script");
-      script.src = gvizURL(FILE_ID, gid, RANGE);
-      script.onerror = () => { cleanup(); reject(new Error("GViz JSONP failed to load")); };
-      document.head.appendChild(script);
-    }).then(resp => {
-      // Parse GViz response into rows/cols like before
-      const rows = (resp.table?.rows || []).map(r =>
-        (r.c || []).map(cell => {
-          if (!cell) return "";
-          const v = (cell.f ?? cell.v);
-          return v == null ? "" : String(v);
-        })
-      );
-      const cols = (resp.table?.cols || []);
-      const colCount = Math.max(cols.length, ...rows.map(r => r.length), MAX_SHOW_COL_IDX+1, 0);
-      rows.forEach(r => { while (r.length < colCount) r.push(""); });
-      return { rows, colCount };
-    });
+  async function fetchRectFor(gid){
+    const res  = await fetch(gvizURL(FILE_ID, gid, RANGE), { cache: "no-store" });
+    const text = await res.text();
+    const fixed = JSON.parse(text.replace(/^[^{]+/, "").replace(/[^}]+$/, ""));
+    const rows = (fixed.table?.rows || []).map(r =>
+      (r.c || []).map(cell => {
+        if (!cell) return "";
+        const v = (cell.f ?? cell.v);
+        return v == null ? "" : String(v);
+      })
+    );
+    const cols = (fixed.table?.cols || []);
+    const colCount = Math.max(cols.length, ...rows.map(r => r.length), MAX_SHOW_COL_IDX+1, 0);
+    rows.forEach(r => { while (r.length < colCount) r.push(""); });
+    return { rows, colCount };
   }
-
-  // Wrapper used by the rest of the app
-  async function fetchRect(){ return fetchRectFor_JSONP(GID); }
+  async function fetchRect(){ return fetchRectFor(GID); }
 
   /** ==== Column widths ==== */
   function buildColgroup(){
-    const colg = document.getElementById("colg");
     colg.innerHTML = "";
     const widths = [160];
     for (let i=0;i<=MAX_SHOW_COL_IDX;i++){
@@ -717,6 +718,25 @@
     }
   }
 
+  /** ==== Sort handling (header row click → per-group sort) ==== */
+  function setSortBy(colLetter){
+    if (!colLetter) { sortSpec = null; persistSort(GID, null); if (currentRows.length) render({ rows: currentRows, colCount: currentColCount }); return; }
+    const idx = colLetterToIdx(colLetter);
+    if (!sortSpec || sortSpec.colIdx !== idx) {
+      sortSpec = { colIdx: idx, dir: "asc" };
+    } else {
+      sortSpec.dir = (sortSpec.dir === "asc" ? "desc" : "asc");
+    }
+    persistSort(GID, sortSpec);
+    if (currentRows.length) render({ rows: currentRows, colCount: currentColCount });
+  }
+  function caretClassFor(colLetter){
+    if (!sortSpec) return "sorted-none";
+    const idx = colLetterToIdx(colLetter);
+    if (sortSpec.colIdx !== idx) return "sorted-none";
+    return sortSpec.dir === "asc" ? "sorted-asc" : "sorted-desc";
+  }
+
   /** ==== Render (with per-group sort) ==== */
   function render({ rows, colCount }){
     currentRows = rows;
@@ -815,6 +835,25 @@
         const txt = row[c] ?? "";
         const lower = (txt||"").toString().trim().toLowerCase();
 
+        if (rIdx === 1) {
+          // Pinned header row (sticky-second): make selected columns clickable sorters
+          const label = (txt || "").trim();
+          if (SORTABLE_HEADERS.has(label)) {
+            const colLetter = SORTABLE_HEADERS.get(label);
+            const span = document.createElement("span");
+            span.className = `hdr-sort ${caretClassFor(colLetter)}`;
+            span.title = "Click to sort within each state";
+            const caret = document.createElement("span");
+            caret.className = "sort-caret";
+            span.textContent = label + " ";
+            span.appendChild(caret);
+            span.addEventListener("click", ()=> setSortBy(colLetter));
+            td.appendChild(span);
+            tr.appendChild(td);
+            continue;
+          }
+        }
+
         if (c === I_COL_IDX) {
           const span = document.createElement("span");
           span.className = "sentiment";
@@ -825,8 +864,6 @@
           td.appendChild(span);
         }
         else if (c === G_COL_IDX) {
-          // If G is @handle, render as @handle link.
-          // If G is a twitter/x URL, render it *as* @handle link.
           const handleLink = buildTwitterLinkFromHandle(txt);
           if (handleLink) {
             td.appendChild(handleLink);
@@ -910,6 +947,7 @@
       tbody.querySelectorAll('tr[data-group]').forEach(tr => tr.setAttribute("data-collapsed","true"));
     };
 
+    // Meta
     meta.textContent = `src=gviz • gid=${GID} • rows: ${rows.length} (showing ${Math.min(rows.length, ROW_CAP)}) • cols: ${colCount} • ${new Date().toLocaleTimeString()}`;
 
     // ---- Restore scroll position after render ----
@@ -944,35 +982,16 @@
   }
   const debouncedSearch = debounce(()=>applySearch(searchBox.value), 150);
 
-  /** ==== Export (current view) ==== */
-  function exportCurrentViewCSV(){
-    const header = COL_HEADERS.slice(0, MAX_SHOW_COL_IDX + 1);
-    const out = [header];
+  /** ==== Export helpers kept (buttons removed from header UI, but leaving functions available) ==== */
+  // If you want them back in UI, add buttons and call these.
 
-    const trs = tbody.querySelectorAll('tr[data-row-index]');
-    trs.forEach(tr => {
-      if (tr.classList.contains('search-row-hide')) return;
-      if (tr.hasAttribute('data-collapsed')) return;
-      const idx = parseInt(tr.getAttribute('data-row-index'), 10);
-      const row = currentRows[idx];
-      if (!row || isOnlyColAText(row)) return;
-      out.push(row.slice(0, MAX_SHOW_COL_IDX + 1));
-    });
-
-    const ts = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
-    const name = `ftt-big-list_gid-${GID}_${ts}.csv`;
-    downloadCSV(name, out);
-  }
-
-  /** ==== Export (all tabs, full data) ==== */
   async function exportAllTabsCSV(){
     const header = ["Region", ...COL_HEADERS.slice(0, MAX_SHOW_COL_IDX + 1)];
     const out = [header];
 
     for (const tab of TABS) {
       try {
-        // JSONP per tab too
-        const pack = await fetchRectFor_JSONP(tab.gid);
+        const pack = await fetchRectFor(tab.gid);
         const rows = pack.rows || [];
         for (let i=0; i<rows.length; i++){
           const r = rows[i];
@@ -992,7 +1011,7 @@
     downloadCSV(name, out);
   }
 
-  /** ==== Scroll persistence helpers ==== */
+  /** ==== Scroll & sort persistence ==== */
   function saveScrollFor(gid, top){
     try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {}
   }
@@ -1038,6 +1057,9 @@
       // remember last tab
       try { localStorage.setItem(ACTIVE_GID_KEY, GID); } catch {}
 
+      // load remembered sort for this tab
+      sortSpec = loadSort(GID);
+
       await load(); // render() will call restoreScrollFor(GID)
       if (lastQuery) applySearch(lastQuery);
     });
@@ -1048,41 +1070,23 @@
 
   imgToggle.addEventListener("change", ()=>{
     saveShowImages(imgToggle.checked);
-    if (currentRows.length) render({ rows: currentRows, colCount: currentColCount });
-  });
-
-  // Sort controls
-  function applySort(){
-    const colLetter = sortColSel.value;
-    if (!colLetter) { sortSpec = null; }
-    else {
-      sortSpec = { colIdx: colLetterToIdx(colLetter), dir: (sortDirSel.value === "desc" ? "desc" : "asc") };
-    }
     if (currentRows.length) {
-      // preserve scroll during sort
       const prevTop = scrollWrap.scrollTop || 0;
       render({ rows: currentRows, colCount: currentColCount });
       scrollWrap.scrollTop = prevTop;
     }
-  }
-  sortColSel.addEventListener("change", applySort);
-  sortDirSel.addEventListener("change", applySort);
-  applySortBtn.addEventListener("click", applySort);
-  clearSortBtn.addEventListener("click", ()=>{
-    sortColSel.value = ""; sortDirSel.value = "asc"; sortSpec = null; applySort();
   });
 
-  // Search
-  searchBox.addEventListener("input", debouncedSearch);
-  clearSearchBtn.addEventListener("click", ()=>{
-    searchBox.value = "";
-    applySearch("");
-    searchBox.focus();
+  // Reset sorting link
+  resetSortBtn.addEventListener("click", ()=>{
+    sortSpec = null;
+    persistSort(GID, null);
+    if (currentRows.length) {
+      const prevTop = scrollWrap.scrollTop || 0;
+      render({ rows: currentRows, colCount: currentColCount });
+      scrollWrap.scrollTop = prevTop;
+    }
   });
-
-  // Export
-  exportBtn.addEventListener("click", exportCurrentViewCSV);
-  exportAllBtn.addEventListener("click", exportAllTabsCSV);
 
   /** ==== Restore scroll after render ==== */
   function restoreScrollFor(gid){
@@ -1097,7 +1101,7 @@
     // restore last-tab if available
     try {
       const stored = localStorage.getItem(ACTIVE_GID_KEY);
-      if (stored && document.querySelector(`.button-row .btn[data-gid="${stored}"]`)) {
+      if (stored && $(`.button-row .btn[data-gid="${stored}"]`)) {
         GID = stored;
         $$(".button-row .btn").forEach(b=>b.classList.toggle("active", b.dataset.gid === GID));
       }
@@ -1107,6 +1111,9 @@
     const showImages = (v === null ? true : v === "true");
     imgToggle.checked = showImages;
     document.body.classList.toggle("hide-images", !showImages);
+
+    // load remembered sort for this tab (if any)
+    sortSpec = loadSort(GID);
 
     await load();   // render + restoreScrollFor(GID)
     startPolling();

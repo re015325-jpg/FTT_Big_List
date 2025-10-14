@@ -951,14 +951,10 @@
         const idx = parseInt(tr.getAttribute("data-row-index"),10);
         const hay = rowTextIndex.get(idx) || "";
         const match = hay.includes(lastQuery);
-        if (idx !== 1) tr.classList.toggle(\"search-row-hide\", !match);
+        tr.classList.toggle("search-row-hide", !match);
         if (match) shown++;
       });
-      
-      // Always keep sticky header row (index 1) visible during search
-      const sticky = tbody.querySelector('tr[data-row-index="1"]');
-      if (sticky) sticky.classList.remove("search-row-hide");
-    // Always show the sticky header + first meta row
+      // Always show the sticky header + first meta row
       tbody.querySelectorAll("tr.is-hidden").forEach(tr => tr.classList.add("search-row-hide"));
 
       meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
@@ -1042,7 +1038,7 @@
       return;
     }
     const tabName = (TABS.find(t => t.gid === GID)?.name || "data").toLowerCase().replace(/\s+/g,'-');
-    const rows = currentRows.slice(1).map(r => r.slice(0, MAX_SHOW_COL_IDX + 1));
+    const rows = currentRows.map(r => r.slice(0, MAX_SHOW_COL_IDX + 1));
     downloadCSV(`ftt-${tabName}.csv`, rows);
   });
 

@@ -280,47 +280,28 @@
     const a = document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click();
     setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
   }
-// --- Price parsing helpers (drop-in) ---
-
-  function extractFirstPriceNumber(s) {
-    // Returns the first numeric value found (e.g., 450 from "$450-550", or 300 from "$300+")
-    // If nothing usable, returns +Infinity
+  function extractFirstNumber(s){
     if (!s) return Number.POSITIVE_INFINITY;
-    const t = String(s).toLowerCase();
-    if (!t || /unknown|retired/.test(t)) return Number.POSITIVE_INFINITY;
-  
-    // Grab the first number (handles commas/decimals); allows formats like "$1,000", "300+", "(450-550)"
-    const m = t.replace(/,/g, '').match(/(\d+(\.\d+)?)/);
+    const m = String(s).replace(/,/g,'').match(/(\d+(\.\d+)?)/);
     return m ? parseFloat(m[1]) : Number.POSITIVE_INFINITY;
   }
-  
-  function priceRank(s) {
-    // Lower rank = cheaper. We keep this rank ASC even when sort direction flips;
-    // the direction is applied afterwards so Unknown/blank always sink.
-    const t = (s || "").toLowerCase();
-  
-    if (!t || /unknown|retired/.test(t)) return 99; // reserved for bottom
-  
-    // Buckets (exact priority you asked for):
-    // 0: "low" only
-    // 1: both "low" and "mid"
-    // 2: "mid" (no high-mid)
-    // 3: "high mid" / "mid high" variations
-    // 4: "high"
-    // 5: anything else
-    const hasLow = /\blow\b/.test(t);
-    const hasMid = /\bmid\b/.test(t);
-    const hasHighMid = /(high[ -]?mid|mid[ -]?high)/.test(t);
-    const hasHigh = /\bhigh\b/.test(t);
-  
+  function norm(s){ return (s||"").toString().trim().toLowerCase(); }
+
+  /* Price range ranking */
+  function priceRank(s){
+    const t = norm(s);
+    if (!t || t.includes("unknown")) return Number.POSITIVE_INFINITY;
+    const hasLow = t.includes("low");
+    const hasMid = t.includes("mid");
+    const hasHighMid = t.includes("high mid") || t.includes("high-mid") || t.includes("mid high") || t.includes("mid-high");
+    const hasHigh = t.includes("high");
     if (hasLow && !hasMid) return 0;
     if (hasLow && hasMid)  return 1;
     if (!hasLow && hasMid && !hasHighMid) return 2;
     if (hasHighMid) return 3;
-    if (hasHigh)    return 4;
+    if (hasHigh) return 4;
     return 5;
   }
-
 
   /* Verified ranking */
   function verifiedRank(s){
@@ -443,30 +424,17 @@
     return (ai, bi) => {
       const a = (currentRows[ai] && currentRows[ai][colIdx] || "");
       const b = (currentRows[bi] && currentRows[bi][colIdx] || "");
-      if (colIdx === J_COL_IDX) {
-        // PRICE: rank first, then numeric min, then tiebreak by text
+      if (colIdx === J_COL_IDX){
         const ra = priceRank(a), rb = priceRank(b);
-      
-        // Unknown/blank/retired always bottom regardless of direction
-        const aIsBottom = (ra === 99);
-        const bIsBottom = (rb === 99);
-        if (aIsBottom && !bIsBottom) return 1;
-        if (bIsBottom && !aIsBottom) return -1;
-      
-        if (ra !== rb) return (ra < rb) ? -1 : 1; // keep rank ASC
-      
-        // Then numeric (first number in any range/format)
-        const na = extractFirstPriceNumber(a);
-        const nb = extractFirstPriceNumber(b);
-        if (na !== nb) return (na < nb ? -1 : 1) * mul; // apply sort direction here
-      
-        // Final tiebreak by normalized text
+        const aBlank = !a || norm(a).includes("unknown"), bBlank = !b || norm(b).includes("unknown");
+        if (aBlank && !bBlank) return 1;
+        if (bBlank && !aBlank) return -1;
+        if (ra !== rb) return (ra < rb) ? -1 : 1; // keep rank asc
+        const na = extractFirstNumber(a), nb = extractFirstNumber(b);
+        if (na !== nb) return (na < nb ? -1 : 1) * mul;
         const ta = norm(a), tb = norm(b);
-        if (ta < tb) return -1 * mul;
-        if (ta > tb) return  1 * mul;
-        return 0;
+        if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
       }
-
       if (colIdx === H_COL_IDX){
         const scamA = norm(a).includes("scam"), scamB = norm(b).includes("scam");
         if (scamA && !scamB) return 1;

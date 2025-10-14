@@ -954,7 +954,11 @@
         tr.classList.toggle("search-row-hide", !match);
         if (match) shown++;
       });
-      // Always show the sticky header + first meta row
+      
+      // Ensure sticky header row remains visible after search filtering
+      const sticky = tbody.querySelector('tr[data-row-index="1"]');
+      if (sticky) sticky.classList.remove("search-row-hide");
+// Always show the sticky header + first meta row
       tbody.querySelectorAll("tr.is-hidden").forEach(tr => tr.classList.add("search-row-hide"));
 
       meta.textContent = meta.textContent.replace(/• matches: \d+/, "");

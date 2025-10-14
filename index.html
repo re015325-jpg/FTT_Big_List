@@ -428,7 +428,7 @@
       }
     }
     const gStrict = unavatarForTwitterHandleStrict(row[G_COL_IDX])
-      .concat(unavatarForTwitterHandleFromUrlish(row[G_COL_IDX]));
+      .concat(unavatarForTwitterHandleStrict(extractTwitterHandleFromUrlish(row[G_COL_IDX])));
     if (gStrict.length) out.push(...gStrict);
     const gGen = unavatarForUrlishSkippingTwitter(row[G_COL_IDX]) || faviconForUrlishSkippingTwitter(row[G_COL_IDX]); if (gGen) out.push(gGen);
     const eGen = unavatarForUrlishSkippingTwitter(row[E_COL_IDX]) || faviconForUrlishSkippingTwitter(row[E_COL_IDX]); if (eGen) out.push(eGen);

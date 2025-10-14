@@ -312,11 +312,46 @@
     return nums.reduce((a,b)=>a+b,0) / nums.length;
   }
   function prettyUrlText(url){
+    const fallback = (s) => String(s)
+      .replace(/^https?:\/\//i,'')
+      .replace(/^www\./i,'')
+      .replace(/\/+$/,''); // trim trailing '/'
+  
     try {
       const u = new URL(url);
-      return (u.hostname || "").replace(/^www\./i,'') || url;
+      const host = (u.hostname || "").replace(/^www\./i,'');
+      const rawPath = (u.pathname || "").replace(/\/+$/,'');
+      if (!rawPath || rawPath === "/") return host;
+  
+      const parts = rawPath.split('/').filter(Boolean);
+  
+      // Sites where the *username is in the first path segment*
+      const usernameHosts = /^(allmylinks\.com|linktr\.ee|beacons\.ai|carrd\.co|stan\.store|onlyfans\.com|fansly\.com|manyvids\.com|patreon\.com|ko-fi\.com|tryst.link\bdsm)$/i;
+  
+      // Heuristic for username-ish slugs
+      const usernameLike = /^[A-Za-z0-9._-]{2,}$/;
+  
+      if (usernameHosts.test(host)) {
+        // Show host/username (first segment)
+        return `${host}/${parts[0]}`;
+      }
+  
+      // Generic heuristic:
+      // - Single-segment path that looks like a handle → show host/segment
+      if (parts.length === 1 && usernameLike.test(parts[0])) {
+        return `${host}/${parts[0]}`;
+      }
+  
+      // - Two segments and first looks like a handle → keep both (still compact)
+      if (parts.length === 2 && usernameLike.test(parts[0]) && parts[1].length <= 20) {
+        return `${host}/${parts[0]}/${parts[1]}`;
+      }
+  
+      // Otherwise, keep it readable: host/…/last
+      const last = parts[parts.length - 1];
+      return `${host}/…/${last}`;
     } catch {
-      return String(url).replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/$/,'');
+      return fallback(url);
     }
   }
 

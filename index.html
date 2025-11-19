@@ -48,8 +48,27 @@
     .controls input[type="search"]{ padding:8px 10px; border-radius:10px; border:1px solid #c8d7eb; min-width:260px; outline: none; background:#fff; }
     .controls .btn { font-size:12px; padding:.45rem .65rem; border-radius:10px; border:none; }
 
+    /* NEW: consent / form bar in header */
+    .consent-bar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center;
+      justify-content:flex-end;
+      font-size:11px;
+      color:#e6f2ff;
+    }
+    .consent-bar span{
+      opacity:0.95;
+    }
+    .consent-bar a{
+      color:#fff;
+      font-weight:600;
+      text-decoration:underline;
+    }
+
     main { display:flex; flex-direction:column; }
-    .table-wrap { height: calc(100vh - 194px); overflow:auto; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .table-wrap { height: calc(100vh - 214px); overflow:auto; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 
     table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 14px; min-width: 2200px; }
     tbody td {
@@ -122,6 +141,20 @@
     .footer-actions{ padding:8px 12px; display:flex; gap:8px; align-items:center; color:#4b5563; font-size:12px; flex-wrap: wrap;}
     .linkish{ color:#0a5a7a; cursor:pointer; text-decoration:underline; }
 
+    /* NEW: footer consent note */
+    .footer-consent{
+      padding:0 12px 10px;
+      font-size:11px;
+      line-height:1.4;
+      color:#4b5563;
+      max-width:760px;
+    }
+    .footer-consent a{
+      color:#0a5a7a;
+      font-weight:600;
+      text-decoration:underline;
+    }
+
     /* New: subtle badge inside the Price cell */
     .price-badge{
       display:inline-block;
@@ -166,6 +199,14 @@
       <button id="expandAll" class="btn" style="background:#3aa655">Expand all</button>
       <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
     </div>
+
+    <!-- NEW: consent / community input form link near top-right -->
+    <div class="consent-bar">
+      <span>Consent is important. To add, update, or remove an entry, please use the community input form:</span>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header" target="_blank" rel="noopener">
+        Open community form
+      </a>
+    </div>
   </header>
 
   <main>
@@ -178,6 +219,19 @@
     <div class="footer-actions">
       <span class="linkish" id="resetSort">Reset sorting</span>
       <button id="downloadCsvBtn" class="btn download">⬇️ Download CSV</button>
+    </div>
+
+    <!-- NEW: consent/removal note + links near CSV -->
+    <div class="footer-consent">
+      Consent is important. If you are on the list and want to be removed, please
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header" target="_blank" rel="noopener">
+        fill out this form
+      </a>
+      and contact the mods at
+      <a href="https://www.reddit.com/r/FullToiletMistresses" target="_blank" rel="noopener">
+        r/FullToiletMistresses
+      </a>
+      on Reddit.
     </div>
   </main>
 
@@ -851,17 +905,8 @@
           // Price: show cleaned numeric + inline band badge; sorting handled in comparator
           const n = computePriceNumber(txt);
           const cleaned = Number.isFinite(n) ? `$${Math.round(n)}` : (txt || "").replace(/(?:high|mid|low|unknown|\?)/gi,'').trim() || "Unknown";
-          // Compute tab average again from closure (works because defined in render)
-          let band = "—";
-          // Quick recompute of avg in this scope is not needed; reuse earlier calc via closure vars
-          // To access _tabAvg, we define it in outer scope of render (already done)
-          // Here we re-calc diff safely:
-          (function(){
-            let sum=0,cnt=0;
-            // No: recomputing is heavy; but for correctness in this isolated scope, we won't recompute.
-          })();
-          // We'll store _tabAvg on render function for reuse:
           const avg = render._tabAvg;
+          let band = "—";
           if (Number.isFinite(n) && Number.isFinite(avg)) {
             const diff = n - avg;
             band = Math.abs(diff) <= 150 ? "average" : (diff > 150 ? "↑ above average" : "↓ below average");
@@ -958,7 +1003,7 @@
       // Ensure sticky header row remains visible after search filtering
       const sticky = tbody.querySelector('tr[data-row-index="1"]');
       if (sticky) sticky.classList.remove("search-row-hide");
-// Always show the sticky header + first meta row
+      // Always show the sticky header + first meta row
       tbody.querySelectorAll("tr.is-hidden").forEach(tr => tr.classList.add("search-row-hide"));
 
       meta.textContent = meta.textContent.replace(/• matches: \d+/, "");

@@ -72,6 +72,9 @@
     .btn.submit{
       background:#9c27b0;
     }
+    .btn.reddit{
+      background:#ff4500;
+    }
 
     .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; justify-content:flex-start; }
     .controls input[type="search"]{ padding:8px 10px; border-radius:10px; border:1px solid #c8d7eb; min-width:260px; outline: none; background:#fff; }
@@ -196,7 +199,7 @@
 
     .btn.download { background:#1f7a1f; }
 
-    /* NEW stacked mini-profile blocks */
+    /* stacked mini-profile blocks */
     .stack-block{
       display:flex;
       flex-direction:column;
@@ -220,6 +223,7 @@
       font-size:12px;
       opacity:0.8;
     }
+
   </style>
 </head>
 <body>
@@ -236,6 +240,14 @@
           rel="noopener"
         >
           Submit to list
+        </a>
+        <a
+          class="btn reddit"
+          href="https://www.reddit.com/r/FullToiletMistresses/"
+          target="_blank"
+          rel="noopener"
+        >
+          Reddit
         </a>
       </div>
     </div>
@@ -288,6 +300,14 @@
         rel="noopener"
       >
         Submit to list
+      </a>
+      <a
+        class="btn reddit"
+        href="https://www.reddit.com/r/FullToiletMistresses/"
+        target="_blank"
+        rel="noopener"
+      >
+        Reddit
       </a>
     </div>
 
@@ -346,7 +366,7 @@
   let SCAT_COL_IDX = -1;
   let FETLIFE_COL_IDX = -1;
 
-  /* Wider columns */
+  /* Wider/watched columns */
   const WIDE_COLS = ["E","K","R"];
   const WIDE_IDX  = WIDE_COLS.map(colLetterToIdx);
 
@@ -623,14 +643,14 @@
         const ra = verifiedRank(a), rb = verifiedRank(b);
         if (ra !== rb) return (ra < rb) ? -1 : 1;
         const ta = norm(a), tb = norm(b);
-        if (!ta && tb) return 1; if (!tb && ta) return -1;
+        if (!ta && tb) return 1; if (!tb && a) return -1;
         if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
       }
       if (colIdx === I_COL_IDX){
         const ra = experienceRank(a), rb = experienceRank(b);
         if (ra !== rb) return (ra < rb) ? -1 : 1;
         const ta = norm(a), tb = norm(b);
-        if (!ta && tb) return 1; if (!tb && ta) return -1;
+        if (!ta && tb) return 1; if (!tb && a) return -1;
         if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
       }
       const ta = norm(a), tb = norm(b);
@@ -668,6 +688,24 @@
   }
   async function fetchRect(){ return fetchRectFor(GID); }
 
+  /* Which columns we hide completely (no visible cells) */
+  function isHiddenColIndex(i){
+    const idxs = [
+      ALIAS_COL_IDX,
+      GENDER_COL_IDX,
+      F_COL_IDX,
+      G_COL_IDX,
+      SCAT_COL_IDX,
+      FETLIFE_COL_IDX,
+      RENOWN_COL_IDX,
+      FULL_REVIEW_COL_IDX,
+      TRAVELS_COL_IDX,
+      P_COL_IDX,
+      Q_COL_IDX
+    ].filter(x => x >= 0);
+    return idxs.includes(i);
+  }
+
   function buildColgroup(){
     colg.innerHTML = "";
     const widths = [160];
@@ -676,11 +714,19 @@
       if (i < 3) w = 170;
       if (WIDE_IDX.includes(i)) w = 280;
       if (i === E_COL_IDX) w = 360;
+
+      if (isHiddenColIndex(i)) w = 0;
+
       widths.push(w);
     }
-    widths.forEach(px => {
+    widths.forEach((px, idx) => {
       const col = document.createElement("col");
-      col.style.width = px + "px";
+      if (px === 0) {
+        col.style.width = "0px";
+        col.style.display = "none";
+      } else {
+        col.style.width = px + "px";
+      }
       colg.appendChild(col);
     });
   }
@@ -688,7 +734,8 @@
   function loadCollapseStateMap(){ return loadCollapseState(GID); }
   function buildGroups(rows){
     const state = loadCollapseStateMap();
-    const groups = []; let current = null;
+    const groups = [];
+    let current = null;
     for (let i=0; i<rows.length; i++){
       const row = rows[i];
       if (isOnlyColAText(row)) {
@@ -699,6 +746,29 @@
         current.members.push(i);
       }
     }
+
+    // allow alt-location duplication within same tab:
+    const nameToGroup = new Map(groups.map(g => [norm(g.stateName), g]));
+    groups.forEach(g => { g._memberSet = new Set(g.members); });
+
+    if (ALT_LOC_COL_IDX >= 0) {
+      for (const g of groups) {
+        const originalMembers = [...g.members];
+        for (const rIdx of originalMembers) {
+          const row = rows[rIdx] || [];
+          const alt = (row[ALT_LOC_COL_IDX] || "").trim();
+          if (!alt) continue;
+          const altNorm = norm(alt);
+          const target = nameToGroup.get(altNorm);
+          if (!target || target === g) continue;
+          if (!target._memberSet.has(rIdx)) {
+            target.members.push(rIdx);
+            target._memberSet.add(rIdx);
+          }
+        }
+      }
+    }
+
     return groups;
   }
   function persistGroups(groups){
@@ -859,7 +929,7 @@
     if (/bsky\.app|bsky\.social/.test(t)) return "bluesky";
     if (/bluesky/.test(t)) return "bluesky";
     if (/twitter\.com|x\.com/.test(t)) return "x";
-    if (t.startsWith("@")) return null; // ambiguous handle; we'll just label generically if needed
+    if (t.startsWith("@")) return null;
     return null;
   }
 
@@ -953,6 +1023,14 @@
 
       for (let c = 0; c <= MAX_SHOW_COL_IDX; c++) {
         const td  = document.createElement("td");
+
+        /* Fully hidden columns (no gap) */
+        if (isHiddenColIndex(c)) {
+          td.style.display = "none";
+          tr.appendChild(td);
+          continue;
+        }
+
         const txt = row[c] ?? "";
         const lower = (txt||"").toString().trim().toLowerCase();
 
@@ -964,18 +1042,16 @@
             tr.appendChild(td);
             continue;
           }
-          if (c === F_COL_IDX || c === G_COL_IDX || c === SCAT_COL_IDX || c === FETLIFE_COL_IDX) {
-            td.textContent = "";
-            tr.appendChild(td);
-            continue;
-          }
           // Combined Contact info header
           if (c === EMAIL_COL_IDX) {
             td.textContent = "Contact info";
             tr.appendChild(td);
             continue;
           }
-          if (c === P_COL_IDX || c === Q_COL_IDX) {
+          // hide headers for moved fields
+          if (c === F_COL_IDX || c === G_COL_IDX || c === SCAT_COL_IDX || c === FETLIFE_COL_IDX ||
+              c === RENOWN_COL_IDX || c === FULL_REVIEW_COL_IDX || c === TRAVELS_COL_IDX ||
+              c === P_COL_IDX || c === Q_COL_IDX || c === ALIAS_COL_IDX || c === GENDER_COL_IDX) {
             td.textContent = "";
             tr.appendChild(td);
             continue;
@@ -992,6 +1068,10 @@
             span.addEventListener("click", ()=> setSortBy(colLetter));
             td.appendChild(span); tr.appendChild(td); continue;
           }
+
+          td.textContent = txt;
+          tr.appendChild(td);
+          continue;
         }
 
         /* Domme + Aliases + Gender stacked */
@@ -1022,17 +1102,16 @@
           tr.appendChild(td);
           continue;
         }
-        // hide alias & gender standalone cells
-        if ((c === ALIAS_COL_IDX || c === GENDER_COL_IDX) && rIdx > 1) {
-          td.textContent = "";
-          tr.appendChild(td);
-          continue;
-        }
 
-        /* Alternative Location + Travels? stacked */
+        /* Alternative Location + Travels? stacked with mapping */
         if (c === ALT_LOC_COL_IDX && rIdx > 1) {
           const alt = row[ALT_LOC_COL_IDX] || "";
-          const trav = TRAVELS_COL_IDX >= 0 ? (row[TRAVELS_COL_IDX] || "") : "";
+          let trav = TRAVELS_COL_IDX >= 0 ? (row[TRAVELS_COL_IDX] || "") : "";
+          let travDisplay = trav.trim();
+          const tNorm = travDisplay.toLowerCase();
+          if (tNorm === "yes") travDisplay = "FMTY";
+          else if (tNorm === "no") travDisplay = "Does not travel";
+
           const block = document.createElement("div");
           block.className = "stack-block";
           if (alt.trim()) {
@@ -1040,10 +1119,10 @@
             l.textContent = alt;
             block.appendChild(l);
           }
-          if (trav.trim()) {
+          if (travDisplay.trim()) {
             const tline = document.createElement("div");
             tline.className = "stack-muted";
-            tline.textContent = `(${trav.trim()})`;
+            tline.textContent = `(${travDisplay.trim()})`;
             block.appendChild(tline);
           }
           td.appendChild(block);
@@ -1091,12 +1170,6 @@
           if (fet.trim()) addLine("Fetlife:", fet);
 
           td.appendChild(block);
-          tr.appendChild(td);
-          continue;
-        }
-        // hide the other link-related cells on data rows
-        if ((c === F_COL_IDX || c === G_COL_IDX || c === SCAT_COL_IDX || c === FETLIFE_COL_IDX) && rIdx > 1) {
-          td.textContent = "";
           tr.appendChild(td);
           continue;
         }
@@ -1149,12 +1222,6 @@
           tr.appendChild(td);
           continue;
         }
-        // hide standalone Reddit/phone cells in data rows
-        if ((c === P_COL_IDX || c === Q_COL_IDX) && rIdx > 1) {
-          td.textContent = "";
-          tr.appendChild(td);
-          continue;
-        }
 
         /* Verified? + Renown stacked */
         if (c === H_COL_IDX && rIdx > 1) {
@@ -1174,11 +1241,6 @@
             block.appendChild(r);
           }
           td.appendChild(block);
-          tr.appendChild(td);
-          continue;
-        }
-        if (c === RENOWN_COL_IDX && rIdx > 1) {
-          td.textContent = "";
           tr.appendChild(td);
           continue;
         }
@@ -1244,46 +1306,12 @@
           tr.appendChild(td);
           continue;
         }
-        if (c === FULL_REVIEW_COL_IDX && rIdx > 1) {
-          td.textContent = "";
-          tr.appendChild(td);
-          continue;
-        }
 
-        /* Original Experience branch for header row (fallback) */
-        if (c === I_COL_IDX && rIdx <= 1) {
-          const span = document.createElement("span"); span.textContent = txt;
-          td.appendChild(span);
-          tr.appendChild(td);
-          continue;
-        }
-
-        /* Remaining special columns from original code */
-
-        if (c === G_COL_IDX && rIdx <= 1) {
-          // header row for original X/BlueSky, now blank (we already blanked above when rIdx===1)
-          tr.appendChild(td);
-          continue;
-        }
-
-        if (c === P_COL_IDX && rIdx <= 1) {
-          tr.appendChild(td);
-          continue;
-        }
-        if (c === Q_COL_IDX && rIdx <= 1) {
-          tr.appendChild(td);
-          continue;
-        }
-
-        if (c === P_COL_IDX && rIdx > 1) {
-          const rl = buildRedditLink(txt); if (rl) td.appendChild(rl); else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
-        }
-        else if (c === Q_COL_IDX && rIdx > 1) {
-          const tel = buildTelAnchor(txt); if (tel) td.appendChild(tel); else { const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt); }
-        }
-        else if (c === J_COL_IDX) {
-          const n = computePriceNumber(txt);
-          const cleaned = Number.isFinite(n) ? `$${Math.round(n)}` : (txt || "").replace(/(?:high|mid|low|unknown|\?)/gi,'').trim() || "Unknown";
+        /* Price + badge */
+        if (c === J_COL_IDX && rIdx > 1) {
+          const txtPrice = txt;
+          const n = computePriceNumber(txtPrice);
+          const cleaned = Number.isFinite(n) ? `$${Math.round(n)}` : (txtPrice || "").replace(/(?:high|mid|low|unknown|\?)/gi,'').trim() || "Unknown";
           const avg = render._tabAvg;
           let band = "—";
           if (Number.isFinite(n) && Number.isFinite(avg)) {
@@ -1295,10 +1323,13 @@
           const badge = document.createElement("span"); badge.className = "price-badge"; badge.textContent = ` ${band}`;
           wrap.appendChild(main); wrap.appendChild(badge);
           td.appendChild(wrap);
+          tr.appendChild(td);
+          continue;
         }
-        else {
-          const frag = linkifyWithMore(txt); if (frag) td.appendChild(frag); else makeTextCell(td, txt);
-        }
+
+        /* Default behavior: linkify or clamp */
+        const frag = linkifyWithMore(txt);
+        if (frag) td.appendChild(frag); else makeTextCell(td, txt);
 
         tr.appendChild(td);
       }
@@ -1312,11 +1343,9 @@
       const row = rows[i];
       if (isOnlyColAText(row)) {
         renderRowByIndex(i);
-        const g = groups.find(x => x.headerIndex === i);
-        if (g && g.members.length) i = g.members[g.members.length - 1];
       } else {
         const inGroup = groups.find(g => g.members.includes(i));
-        if (!inGroup) renderRowByIndex(i);
+        if (!inGroup) renderDataRow(i, null);
       }
     }
 

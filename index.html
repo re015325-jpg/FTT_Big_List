@@ -156,6 +156,7 @@
 
     .clamp-wrap { display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
     .clamp-3 { -webkit-line-clamp:3; }
+    .clamp-5 { -webkit-line-clamp:5; }
     .moreless { display:inline-block; margin-top:6px; font-size:12px; color:var(--accent); cursor:pointer; user-select:none; }
 
     .search-row-hide { display: none !important; }
@@ -224,6 +225,15 @@
       opacity:0.8;
     }
 
+    .svc-tag{
+      display:inline-block;
+      padding:2px 4px;
+      margin:0 2px 2px 0;
+      border-radius:4px;
+      border:1px solid #d1d5db;
+      background:#f3f4f6;
+      font-size:11px;
+    }
   </style>
 </head>
 <body>
@@ -356,15 +366,18 @@
   let H_COL_IDX = 7; // Verified?
   let I_COL_IDX = 8; // Experience?
   let J_COL_IDX = 9; // Price range?
+  let REVIEW_COL_IDX = 10; // Review/notes
   let RENOWN_COL_IDX = 11; // Renown
   let FULL_REVIEW_COL_IDX = 12; // Link to full review
   let TRAVELS_COL_IDX = 13; // Travels?
   let EMAIL_COL_IDX = 14; // email
   let P_COL_IDX = 15; // Reddit
   let Q_COL_IDX = 16; // phone
+  let SERVICES_COL_IDX = 17; // Services Provided
   let GENDER_COL_IDX = -1; // will be detected
   let SCAT_COL_IDX = -1;
   let FETLIFE_COL_IDX = -1;
+  let WHATSAPP_COL_IDX = -1;
 
   /* Wider/watched columns */
   const WIDE_COLS = ["E","K","R"];
@@ -396,6 +409,21 @@
     "Location","Alternative Location","Domme","Images/Aliases","Website","Link tree/All links",
     "X/BlueSky","Verified?","Experience?","Price range?","Review/notes","Renown",
     "Link to full review","Travels?","email","Reddit","phone","Services Provided","link"
+  ];
+
+  const SERVICE_KEYWORDS = [
+    "Full toilet",
+    "Brown showers",
+    "Golden showers",
+    "Ruby Showers",
+    "Roman showers",
+    "Double sessions",
+    "Toilet chair",
+    "Bondage",
+    "Couples",
+    "LGBTQ friendly",
+    "Impact play",
+    "Strapon"
   ];
 
   /** ==== DOM ==== */
@@ -701,7 +729,8 @@
       FULL_REVIEW_COL_IDX,
       TRAVELS_COL_IDX,
       P_COL_IDX,
-      Q_COL_IDX
+      Q_COL_IDX,
+      WHATSAPP_COL_IDX
     ].filter(x => x >= 0);
     return idxs.includes(i);
   }
@@ -713,7 +742,9 @@
       let w = 150;
       if (i < 3) w = 170;
       if (WIDE_IDX.includes(i)) w = 280;
-      if (i === E_COL_IDX) w = 360;
+      if (i === E_COL_IDX) w = 360;              // Links block
+      if (i === EMAIL_COL_IDX) w = 320;          // Contact info
+      if (i === SERVICES_COL_IDX) w = 420;       // Services Provided wider
 
       if (isHiddenColIndex(i)) w = 0;
 
@@ -740,17 +771,25 @@
       const row = rows[i];
       if (isOnlyColAText(row)) {
         const name = (row[0]||"").trim() || "Untitled";
-        current = { headerIndex: i, stateName: name, members: [], collapsed: (state[name] !== undefined ? state[name] : true) };
+        current = {
+          headerIndex: i,
+          stateName: name,
+          stateNameLower: norm(name),
+          members: [],
+          collapsed: (state[name] !== undefined ? state[name] : true)
+        };
         groups.push(current);
       } else if (current) {
         current.members.push(i);
       }
     }
 
-    // allow alt-location duplication within same tab:
-    const nameToGroup = new Map(groups.map(g => [norm(g.stateName), g]));
-    groups.forEach(g => { g._memberSet = new Set(g.members); });
+    // track membership sets
+    for (const g of groups) {
+      g._memberSet = new Set(g.members);
+    }
 
+    // Duplicate entries into other groups when Alternative Location mentions that region name
     if (ALT_LOC_COL_IDX >= 0) {
       for (const g of groups) {
         const originalMembers = [...g.members];
@@ -758,12 +797,17 @@
           const row = rows[rIdx] || [];
           const alt = (row[ALT_LOC_COL_IDX] || "").trim();
           if (!alt) continue;
-          const altNorm = norm(alt);
-          const target = nameToGroup.get(altNorm);
-          if (!target || target === g) continue;
-          if (!target._memberSet.has(rIdx)) {
-            target.members.push(rIdx);
-            target._memberSet.add(rIdx);
+          const altLower = norm(alt);
+          if (!altLower) continue;
+
+          for (const target of groups) {
+            if (target === g) continue;
+            if (!target.stateNameLower) continue;
+            if (!altLower.includes(target.stateNameLower)) continue;
+            if (!target._memberSet.has(rIdx)) {
+              target.members.push(rIdx);
+              target._memberSet.add(rIdx);
+            }
           }
         }
       }
@@ -775,9 +819,9 @@
     const map = {}; for (const g of groups) map[g.stateName] = g.collapsed; saveCollapseState(GID, map);
   }
 
-  function makeTextCell(td, text){
+  function makeTextCell(td, text, maxLines=3){
     const wrapper = document.createElement("div");
-    wrapper.className = "clamp-wrap clamp-3";
+    wrapper.className = "clamp-wrap clamp-" + maxLines;
     wrapper.textContent = text ?? "";
     td.appendChild(wrapper);
     requestAnimationFrame(()=>{
@@ -785,13 +829,62 @@
         const btn = document.createElement("span");
         btn.className = "moreless"; btn.textContent = " More";
         btn.addEventListener("click", ()=>{
-          wrapper.classList.toggle("clamp-3");
-          btn.textContent = wrapper.classList.contains("clamp-3") ? " More" : " Less";
+          wrapper.classList.toggle("clamp-" + maxLines);
+          btn.textContent = wrapper.classList.contains("clamp-" + maxLines) ? " More" : " Less";
         });
         td.appendChild(btn);
       }
     });
   }
+
+  function buildServicesCell(td, text){
+    const wrapper = document.createElement("div");
+    wrapper.className = "clamp-wrap clamp-5";
+
+    if (!text){
+      wrapper.textContent = "";
+      td.appendChild(wrapper);
+      return;
+    }
+
+    const pattern = new RegExp(
+      "(" + SERVICE_KEYWORDS
+        .map(k => k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/\s+/g,"\\s+"))
+        .join("|") + ")",
+      "gi"
+    );
+
+    let lastIndex = 0;
+    let m;
+    while ((m = pattern.exec(text)) !== null) {
+      if (m.index > lastIndex) {
+        wrapper.appendChild(document.createTextNode(text.slice(lastIndex, m.index)));
+      }
+      const tag = document.createElement("span");
+      tag.className = "svc-tag";
+      tag.textContent = m[0];
+      wrapper.appendChild(tag);
+      lastIndex = pattern.lastIndex;
+    }
+    if (lastIndex < text.length) {
+      wrapper.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    td.appendChild(wrapper);
+
+    requestAnimationFrame(()=>{
+      if (wrapper.scrollHeight > wrapper.clientHeight + 1) {
+        const btn = document.createElement("span");
+        btn.className = "moreless"; btn.textContent = " More";
+        btn.addEventListener("click", ()=>{
+          wrapper.classList.toggle("clamp-5");
+          btn.textContent = wrapper.classList.contains("clamp-5") ? " More" : " Less";
+        });
+        td.appendChild(btn);
+      }
+    });
+  }
+
   function linkifyWithMore(text, {alwaysShow=false, pretty=false} = {}){
     const m = text && text.match(URL_RE); if (!m) return null;
     const url = m[1]; const frag = document.createDocumentFragment();
@@ -817,7 +910,9 @@
     return a;
   }
   function parseRedditUsername(raw) {
-    if (!raw) return null; let s = String(raw).trim(); s = s.replace(/^@/,'').replace(/^\/?u\//i,''); s = s.split(/\s+/)[0];
+    if (!raw) return null; let s = String(raw).trim();
+    s = s.replace(/^@/,'').replace(/^\/?u\//i,'').replace(/^u\//i,'');
+    s = s.split(/\s+/)[0];
     if (!/^[A-Za-z0-9_]{2,25}$/.test(s)) return null; return s;
   }
   function buildRedditLink(raw){
@@ -827,16 +922,41 @@
     a.textContent = `u/${user}`; a.className = "cell-link"; return a;
   }
   function normalizeDigits(str) { return (str || "").replace(/\D+/g, ""); }
-  function formatUSPhone(digits) {
-    if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-    if (digits.length === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
+  function formatPhoneGeneral(digits) {
+    const len = digits.length;
+    if (len < 7 || len > 15) return "";
+    if (len === 7) return `${digits.slice(0,3)}-${digits.slice(3)}`;
+    if (len === 8) return `${digits.slice(0,4)}-${digits.slice(4)}`;
+    if (len === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    if (len === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
     return digits;
   }
   function buildTelAnchor(raw) {
-    const d = normalizeDigits(raw); if (!d) return null;
+    const digits = normalizeDigits(raw);
+    const disp = formatPhoneGeneral(digits);
+    if (!disp) return null;
+    let hrefDigits;
+    if (digits.length === 11 && digits[0] === '1') hrefDigits = '+' + digits;
+    else if (digits.length === 10) hrefDigits = '+1' + digits;
+    else hrefDigits = '+' + digits;
     const a = document.createElement("a");
-    a.href = `tel:${d.length===11 && d[0]==='1' ? '+'+d : (d.length===10 ? '+1'+d : d)}`; a.target = "_self";
-    a.textContent = formatUSPhone(d); a.className = "cell-link"; return a;
+    a.href = `tel:${hrefDigits}`;
+    a.target = "_self";
+    a.textContent = disp;
+    a.className = "cell-link";
+    return a;
+  }
+  function buildWhatsappAnchor(raw){
+    const digits = normalizeDigits(raw);
+    const disp = formatPhoneGeneral(digits);
+    if (!disp) return null;
+    const a = document.createElement("a");
+    a.href = `https://wa.me/${digits}`;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.textContent = disp;
+    a.className = "cell-link";
+    return a;
   }
 
   function buildImageCell(tdImg, row, rIdx){
@@ -910,15 +1030,18 @@
       else if (label === "verified?") H_COL_IDX = i;
       else if (label === "experience?") I_COL_IDX = i;
       else if (label === "price range?") J_COL_IDX = i;
+      else if (label === "review/notes") REVIEW_COL_IDX = i;
       else if (label === "renown") RENOWN_COL_IDX = i;
       else if (label === "link to full review") FULL_REVIEW_COL_IDX = i;
       else if (label === "travels?") TRAVELS_COL_IDX = i;
       else if (label === "email") EMAIL_COL_IDX = i;
       else if (label === "reddit") P_COL_IDX = i;
       else if (label === "phone") Q_COL_IDX = i;
+      else if (label === "services provided") SERVICES_COL_IDX = i;
       else if (label === "gender") GENDER_COL_IDX = i;
       else if (label === "scat link") SCAT_COL_IDX = i;
       else if (label === "fetlife") FETLIFE_COL_IDX = i;
+      else if (label === "what's app" || label === "whats app" || label === "whatsapp") WHATSAPP_COL_IDX = i;
     }
   }
 
@@ -931,6 +1054,14 @@
     if (/twitter\.com|x\.com/.test(t)) return "x";
     if (t.startsWith("@")) return null;
     return null;
+  }
+
+  function appendScamIcon(node, text){
+    if (!/scam/i.test(text || "")) return;
+    const warn = document.createElement("span");
+    warn.textContent = " ⚠️";
+    warn.title = "Reports mention scam";
+    node.appendChild(warn);
   }
 
   function render({ rows, colCount }){
@@ -1048,10 +1179,11 @@
             tr.appendChild(td);
             continue;
           }
-          // hide headers for moved fields
+          // hide headers for moved/hidden fields
           if (c === F_COL_IDX || c === G_COL_IDX || c === SCAT_COL_IDX || c === FETLIFE_COL_IDX ||
               c === RENOWN_COL_IDX || c === FULL_REVIEW_COL_IDX || c === TRAVELS_COL_IDX ||
-              c === P_COL_IDX || c === Q_COL_IDX || c === ALIAS_COL_IDX || c === GENDER_COL_IDX) {
+              c === P_COL_IDX || c === Q_COL_IDX || c === ALIAS_COL_IDX || c === GENDER_COL_IDX ||
+              c === WHATSAPP_COL_IDX) {
             td.textContent = "";
             tr.appendChild(td);
             continue;
@@ -1084,6 +1216,8 @@
           if (domme.trim()) {
             const d = document.createElement("div");
             d.textContent = domme;
+            d.style.fontWeight = "700";
+            d.style.color = "#000";
             block.appendChild(d);
           }
           if (alias.trim()) {
@@ -1176,47 +1310,47 @@
 
         /* Combined Contact info block in email column */
         if (c === EMAIL_COL_IDX && rIdx > 1) {
-          const email = row[EMAIL_COL_IDX] || "";
-          const reddit = P_COL_IDX >= 0 ? (row[P_COL_IDX] || "") : "";
-          const phone = Q_COL_IDX >= 0 ? (row[Q_COL_IDX] || "") : "";
+          const emailRaw = row[EMAIL_COL_IDX] || "";
+          const redditRaw = P_COL_IDX >= 0 ? (row[P_COL_IDX] || "") : "";
+          const phoneRaw = Q_COL_IDX >= 0 ? (row[Q_COL_IDX] || "") : "";
+          const whatsappRaw = WHATSAPP_COL_IDX >= 0 ? (row[WHATSAPP_COL_IDX] || "") : "";
           const block = document.createElement("div");
           block.className = "stack-block";
 
-          function addLine(label, value, builder){
-            if (!value || !String(value).trim()) return;
-            const line = document.createElement("div");
-            line.className = "stack-line";
-            const l = document.createElement("span");
-            l.className = "stack-label";
-            l.textContent = label;
-            const v = document.createElement("span");
-            v.className = "stack-value";
-            let node = null;
-            if (builder) node = builder(value);
-            if (node) v.appendChild(node);
-            else {
-              const frag = linkifyWithMore(value);
-              if (frag) v.appendChild(frag); else v.textContent = value;
+          function addMulti(labelBase, raw, builder){
+            if (!raw) return;
+            const parts = String(raw).split(/[;,]/);
+            let idx = 0;
+            for (const part of parts) {
+              const val = part.trim();
+              if (!val) continue;
+              const node = builder(val);
+              if (!node) continue;
+              const line = document.createElement("div");
+              line.className = "stack-line";
+              const l = document.createElement("span");
+              l.className = "stack-label";
+              l.textContent = idx === 0 ? labelBase + ":" : labelBase + " alt:";
+              const v = document.createElement("span");
+              v.className = "stack-value";
+              v.appendChild(node);
+              line.appendChild(l); line.appendChild(v);
+              block.appendChild(line);
+              idx++;
             }
-            line.appendChild(l); line.appendChild(v);
-            block.appendChild(line);
           }
 
-          if (email.trim()) {
-            addLine("Email:", email, (val)=>{
-              const a = document.createElement("a");
-              a.href = `mailto:${val.trim()}`;
-              a.textContent = val.trim();
-              a.className = "cell-link";
-              return a;
-            });
-          }
-          if (reddit.trim()) {
-            addLine("Reddit:", reddit, (val)=>buildRedditLink(val));
-          }
-          if (phone.trim()) {
-            addLine("Phone:", phone, (val)=>buildTelAnchor(val));
-          }
+          addMulti("Phone", phoneRaw, (val)=>buildTelAnchor(val));
+          addMulti("WhatsApp", whatsappRaw, (val)=>buildWhatsappAnchor(val));
+          addMulti("Email", emailRaw, (val)=>{
+            if (!/@/.test(val)) return null;
+            const a = document.createElement("a");
+            a.href = `mailto:${val.trim()}`;
+            a.textContent = val.trim();
+            a.className = "cell-link";
+            return a;
+          });
+          addMulti("Reddit", redditRaw, (val)=>buildRedditLink(val));
 
           td.appendChild(block);
           tr.appendChild(td);
@@ -1232,12 +1366,14 @@
           if (ver.trim()) {
             const v = document.createElement("div");
             v.textContent = ver;
+            appendScamIcon(v, ver);
             block.appendChild(v);
           }
           if (ren.trim()) {
             const r = document.createElement("div");
             r.className = "stack-muted";
             r.textContent = ren;
+            appendScamIcon(r, ren);
             block.appendChild(r);
           }
           td.appendChild(block);
@@ -1280,11 +1416,13 @@
             const v = document.createElement("span");
             v.className = "stack-value";
             v.appendChild(iconSpan);
+            appendScamIcon(v, exp);
             line.appendChild(lbl); line.appendChild(v);
             block.appendChild(line);
           } else if (exp.trim()) {
             const line = document.createElement("div");
             line.textContent = exp;
+            appendScamIcon(line, exp);
             block.appendChild(line);
           }
 
@@ -1327,9 +1465,39 @@
           continue;
         }
 
+        /* Services Provided with tags and 5-line clamp */
+        if (c === SERVICES_COL_IDX && rIdx > 1) {
+          buildServicesCell(td, txt);
+          tr.appendChild(td);
+          continue;
+        }
+
+        /* Review/notes with scam icon + linkify */
+        if (c === REVIEW_COL_IDX && rIdx > 1) {
+          const wrap = document.createElement("div");
+          wrap.className = "clamp-wrap clamp-3";
+          const frag = linkifyWithMore(txt);
+          if (frag) wrap.appendChild(frag); else wrap.textContent = txt;
+          appendScamIcon(wrap, txt);
+          td.appendChild(wrap);
+          requestAnimationFrame(()=>{
+            if (wrap.scrollHeight > wrap.clientHeight + 1) {
+              const btn = document.createElement("span");
+              btn.className = "moreless"; btn.textContent = " More";
+              btn.addEventListener("click", ()=>{
+                wrap.classList.toggle("clamp-3");
+                btn.textContent = wrap.classList.contains("clamp-3") ? " More" : " Less";
+              });
+              td.appendChild(btn);
+            }
+          });
+          tr.appendChild(td);
+          continue;
+        }
+
         /* Default behavior: linkify or clamp */
         const frag = linkifyWithMore(txt);
-        if (frag) td.appendChild(frag); else makeTextCell(td, txt);
+        if (frag) td.appendChild(frag); else makeTextCell(td, txt, 3);
 
         tr.appendChild(td);
       }

@@ -33,16 +33,47 @@
     }
 
     header { display: grid; gap: 8px; padding: 10px 12px; background: var(--brand); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-    header .top { display:flex; gap:12px; align-items:center; }
+
+    /* NEW: top row with right-side group */
+    header .top {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
     h1 { margin:0; font-size:15px; font-weight:800; line-height:1.1; letter-spacing:.2px; }
-    .meta { margin-left:auto; font-size:12px; opacity:.95; background: #ffffff1a; padding:4px 8px; border-radius:8px; }
+
+    .top-right{ /* NEW */
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-left:auto;
+      flex-wrap:wrap;
+    }
+
+    .meta {
+      margin-left:0; /* changed from auto because we now use .top-right */
+      font-size:12px; opacity:.95; background: #ffffff1a; padding:4px 8px; border-radius:8px;
+    }
 
     .button-row { display:flex; flex-wrap:wrap; gap:6px; }
-    .btn { color:#fff; background:#0063b1; border:0; border-radius:10px; padding:.40rem .65rem; font-weight:700; font-size:13px; cursor:pointer; transition:transform .05s ease, filter .2s ease; }
+    .btn {
+      color:#fff; background:#0063b1; border:0; border-radius:10px;
+      padding:.40rem .65rem; font-weight:700; font-size:13px;
+      cursor:pointer; transition:transform .05s ease, filter .2s ease;
+      text-decoration:none; /* so links styled as buttons look like buttons */
+      display:inline-flex; align-items:center; justify-content:center;
+    }
     .btn:active{ transform: translateY(1px); }
     .btn.us{background:#0078d7}.btn.canada{background:#d83b01}.btn.samerica{background:#107c10}
     .btn.europe{background:#6b46c1}.btn.eastasia{background:#e81123}.btn.mideast{background:#ffb900;color:#333}
     .btn.active{outline:2px solid #fff; outline-offset:1px; filter:brightness(1.06)}
+
+    /* NEW: submit button color */
+    .btn.submit{
+      background:#9c27b0;
+    }
 
     .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:12px; justify-content:flex-start; }
     .controls input[type="search"]{ padding:8px 10px; border-radius:10px; border:1px solid #c8d7eb; min-width:260px; outline: none; background:#fff; }
@@ -68,7 +99,9 @@
     }
 
     main { display:flex; flex-direction:column; }
-    .table-wrap { height: calc(100vh - 214px); overflow:auto; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+
+    /* slightly taller header now, bump the height calc a bit */
+    .table-wrap { height: calc(100vh - 224px); overflow:auto; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 
     table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 14px; min-width: 2200px; }
     tbody td {
@@ -138,7 +171,15 @@
     /* Tiny icon cells (Column I) */
     .sentiment { font-size:18px; line-height:1; }
 
-    .footer-actions{ padding:8px 12px; display:flex; gap:8px; align-items:center; color:#4b5563; font-size:12px; flex-wrap: wrap;}
+    .footer-actions{
+      padding:8px 12px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      color:#4b5563;
+      font-size:12px;
+      flex-wrap: wrap;
+    }
     .linkish{ color:#0a5a7a; cursor:pointer; text-decoration:underline; }
 
     /* NEW: footer consent note */
@@ -175,7 +216,19 @@
   <header>
     <div class="top">
       <h1>FTT Big List</h1>
-      <div class="meta" id="meta">loading…</div>
+
+      <!-- NEW: right side meta + submit button -->
+      <div class="top-right">
+        <div class="meta" id="meta">loading…</div>
+        <a
+          class="btn submit"
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
+          target="_blank"
+          rel="noopener"
+        >
+          Submit to list
+        </a>
+      </div>
     </div>
 
     <div class="button-row" role="navigation" aria-label="Tabs">
@@ -200,7 +253,7 @@
       <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
     </div>
 
-    <!-- NEW: consent / community input form link near top-right -->
+    <!-- Consent / community input form link (small text) -->
     <div class="consent-bar">
       <span>Consent is important. To add, update, or remove an entry, please use the community input form:</span>
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header" target="_blank" rel="noopener">
@@ -219,9 +272,19 @@
     <div class="footer-actions">
       <span class="linkish" id="resetSort">Reset sorting</span>
       <button id="downloadCsvBtn" class="btn download">⬇️ Download CSV</button>
+
+      <!-- NEW: big submit button near CSV -->
+      <a
+        class="btn submit"
+        href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
+        target="_blank"
+        rel="noopener"
+      >
+        Submit to list
+      </a>
     </div>
 
-    <!-- NEW: consent/removal note + links near CSV -->
+    <!-- Consent/removal note near CSV -->
     <div class="footer-consent">
       Consent is important. If you are on the list and want to be removed, please
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header" target="_blank" rel="noopener">
@@ -999,7 +1062,7 @@
         tr.classList.toggle("search-row-hide", !match);
         if (match) shown++;
       });
-      
+
       // Ensure sticky header row remains visible after search filtering
       const sticky = tbody.querySelector('tr[data-row-index="1"]');
       if (sticky) sticky.classList.remove("search-row-hide");

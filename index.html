@@ -119,7 +119,6 @@
       gap:6px;
       position:relative;
       z-index:1;
-      margin-left: 18px;
     }
     .btn {
       color:#fff;
@@ -365,8 +364,6 @@
     .pill.green{ background:#2e9e4f; }
     .pill.brown{ background:#8b5a2b; }
     .pill.orange{ background:#ff4500; }
-    .pill.red{ background:#d32f2f; color:#fff; }
-    .pill.dark-red{ background:#941212; color:#fff; }
 
     .footer-actions{
       padding:8px 12px;
@@ -963,7 +960,7 @@
       let w = 150;
       if (i < 3) w = 170;
       if (WIDE_IDX.includes(i)) w = 280;
-      if (i === E_COL_IDX) w = 540;              // Links block
+      if (i === E_COL_IDX) w = 360;              // Links block
       if (i === EMAIL_COL_IDX) w = 320;          // Contact info
       if (i === SERVICES_COL_IDX) w = 420;       // Services Provided wider
 
@@ -1571,10 +1568,7 @@
             block.appendChild(line);
           }
 
-          if (website.trim()) {
-            const url = firstUrl(website) || website.trim();
-            addPill("Website", url, "red");
-          }
+          if (website.trim()) addLine("Website:", website);
 
           if (links.trim()) {
             const url = firstUrl(links) || links.trim();
@@ -1595,10 +1589,7 @@
               addPill(`Scat link: ${scatFmt.text}`, url, "brown");
             }
           }
-          if (fet.trim()) {
-            const url = firstUrl(fet) || fet.trim();
-            addPill("Fetlife", url, "dark-red");
-          }
+          if (fet.trim()) addLine("Fetlife:", fet);
 
           td.appendChild(block);
           tr.appendChild(td);

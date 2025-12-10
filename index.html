@@ -119,6 +119,7 @@
       gap:6px;
       position:relative;
       z-index:1;
+      margin-left: 18px;
     }
     .btn {
       color:#fff;
@@ -364,6 +365,8 @@
     .pill.green{ background:#2e9e4f; }
     .pill.brown{ background:#8b5a2b; }
     .pill.orange{ background:#ff4500; }
+    .pill.red{ background:#d32f2f; color:#fff; }
+    .pill.dark-red{ background:#941212; color:#fff; }
 
     .footer-actions{
       padding:8px 12px;
@@ -375,6 +378,31 @@
       flex-wrap: wrap;
       background:rgba(255,255,255,0.8);
       backdrop-filter: blur(3px);
+    }
+
+    .footer-tabs-row{
+      width:100%;
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      padding-top:10px;
+      margin-top:6px;
+      border-top:1px solid var(--line-2);
+    }
+    .footer-tabs-row .btn{
+      background:#f7fafc;
+      color:#0a2236;
+      border:1px solid var(--line-2);
+      box-shadow:0 1px 2px rgba(0,0,0,0.12);
+      border-radius:12px;
+      padding:.55rem .95rem;
+      font-weight:700;
+    }
+    .footer-tabs-row .btn:hover{
+      filter:brightness(0.98);
+    }
+    .footer-tabs-row .btn:active{
+      transform:translateY(1px);
     }
     .linkish{ color:#0a5a7a; cursor:pointer; text-decoration:underline; }
 
@@ -520,15 +548,15 @@
       >
         Submit to list
       </a>
-      <a
-        class="btn reddit"
-        href="https://www.reddit.com/r/FullToiletMistresses/"
-        target="_blank"
-        rel="noopener"
-      >
-        Reddit
-      </a>
-      <div class="button-row" role="navigation" aria-label="Tabs (footer)">
+        <a
+          class="btn reddit"
+          href="https://www.reddit.com/r/FullToiletMistresses/"
+          target="_blank"
+          rel="noopener"
+        >
+          Reddit
+        </a>
+        <div class="footer-tabs-row" role="navigation" aria-label="Tabs (footer)">
         <button class="btn us"      data-gid="0">United States</button>
         <button class="btn canada"         data-gid="918890863">Canada</button>
         <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
@@ -960,7 +988,7 @@
       let w = 150;
       if (i < 3) w = 170;
       if (WIDE_IDX.includes(i)) w = 280;
-      if (i === E_COL_IDX) w = 360;              // Links block
+      if (i === E_COL_IDX) w = 540;              // Links block
       if (i === EMAIL_COL_IDX) w = 320;          // Contact info
       if (i === SERVICES_COL_IDX) w = 420;       // Services Provided wider
 
@@ -1568,7 +1596,10 @@
             block.appendChild(line);
           }
 
-          if (website.trim()) addLine("Website:", website);
+            if (website.trim()) {
+              const url = firstUrl(website) || website.trim();
+              addPill(prettyUrlText(url), url, "red");
+            }
 
           if (links.trim()) {
             const url = firstUrl(links) || links.trim();
@@ -1580,16 +1611,19 @@
             addPill(formatSocialDisplay(social), url, "blue");
           }
 
-          if (scat.trim()) {
-            const url = firstUrl(scat) || scat.trim();
-            const scatFmt = formatScatDisplay(scat);
-            if (scatFmt.dropLabel) {
-              addPill(scatFmt.text, url, "brown");
-            } else {
-              addPill(`Scat link: ${scatFmt.text}`, url, "brown");
+            if (scat.trim()) {
+              const url = firstUrl(scat) || scat.trim();
+              const scatFmt = formatScatDisplay(scat);
+              if (scatFmt.dropLabel) {
+                addPill(scatFmt.text, url, "brown");
+              } else {
+                addPill(`Scat link: ${scatFmt.text}`, url, "brown");
+              }
             }
-          }
-          if (fet.trim()) addLine("Fetlife:", fet);
+            if (fet.trim()) {
+              const url = firstUrl(fet) || fet.trim();
+              addPill(prettyUrlText(url), url, "dark-red");
+            }
 
           td.appendChild(block);
           tr.appendChild(td);

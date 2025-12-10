@@ -158,6 +158,26 @@
       border-radius:999px;
     }
 
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      padding:6px 12px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:12px;
+      color:#fff;
+      text-decoration:none;
+      border:0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.16);
+      white-space:nowrap;
+    }
+    .pill-blue{ background:#62b3ff; }
+    .pill-green{ background:#22a573; }
+    .pill-brown{ background:#8b5a2b; }
+    .pill-orange{ background:#ff4500; }
+
     .controls {
       display:flex;
       flex-wrap:wrap;
@@ -493,6 +513,15 @@
     <div class="footer-actions">
       <span class="linkish" id="resetSort">Reset sorting</span>
       <button id="downloadCsvBtn" class="btn download">⬇️ Download CSV</button>
+
+      <div class="button-row bottom-tabs" role="navigation" aria-label="Tabs (footer)">
+        <button class="btn us active"      data-gid="0">United States</button>
+        <button class="btn canada"         data-gid="918890863">Canada</button>
+        <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
+        <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
+        <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
+        <button class="btn mideast"        data-gid="1604960979">Middle East</button>
+      </div>
 
       <a
         class="btn submit"
@@ -865,14 +894,14 @@
         if (ra !== rb) return (ra < rb) ? -1 : 1;
         const ta = norm(a), tb = norm(b);
         if (!ta && tb) return 1; if (!tb && a) return -1;
-        if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
+        if (ta < tb) return -1 * mul; if (ta > tb) return  1 * mul; return 0;
       }
       if (colIdx === I_COL_IDX){
         const ra = experienceRank(a), rb = experienceRank(b);
         if (ra !== rb) return (ra < rb) ? -1 : 1;
         const ta = norm(a), tb = norm(b);
         if (!ta && tb) return 1; if (!tb && a) return -1;
-        if (ta < tb) return -1 * mul; if (ta > tb) return 1 * mul; return 0;
+        if (ta < tb) return -1 * mul; if (ta > tb) return  1 * mul; return 0;
       }
       const ta = norm(a), tb = norm(b);
       if (!ta && tb) return 1;
@@ -1149,6 +1178,12 @@
     return a;
   }
 
+  function buildRedditPill(raw){
+    const user = parseRedditUsername(raw);
+    if (!user) return null;
+    return createPill(`Reddit: u/${user}`, "pill-orange", `https://www.reddit.com/user/${encodeURIComponent(user)}`);
+  }
+
   function buildImageCell(tdImg, row, rIdx){
     if (!imgToggle.checked) return;
     if (tdImg._imgReady) return;
@@ -1237,11 +1272,85 @@
   function detectSocialKind(text){
     const t = (text || "").toLowerCase();
     if (!t) return null;
-    if (/bsky\.app|bsky\.social/.test(t)) return "bluesky";
+    if (/bsky.app|bsky.social/.test(t)) return "bluesky";
     if (/bluesky/.test(t)) return "bluesky";
-    if (/twitter\.com|x\.com/.test(t)) return "x";
+    if (/twitter.com|x.com/.test(t)) return "x";
     if (t.startsWith("@")) return null;
     return null;
+  }
+
+  function createPill(text, colorClass, href){
+    const el = document.createElement(href ? "a" : "span");
+    el.className = `pill ${colorClass || ""}`.trim();
+    el.textContent = text;
+    if (href) {
+      el.href = href;
+      el.target = "_blank";
+      el.rel = "noopener";
+    }
+    return el;
+  }
+
+  function extractUsernameFromUrlish(raw){
+    if (!raw) return "";
+    const at = raw.match(/@([A-Za-z0-9._-]{1,80})/);
+    if (at) return at[1];
+    const fromUrl = firstUrl(raw) || raw;
+    try {
+      const u = new URL(fromUrl);
+      const parts = u.pathname.split("/").filter(Boolean);
+      if (parts[0] && ["profile","user","users","u"].includes(parts[0].toLowerCase()) && parts[1]) {
+        return parts[1].replace(/^@/,'');
+      }
+      if (parts.length) return parts[parts.length - 1].replace(/^@/,'');
+      const hostParts = u.hostname.replace(/^www\./i,'').split(".");
+      if (hostParts.length > 0) return hostParts[0];
+    } catch {}
+    const clean = raw.replace(/^https?:\/\//i,'').replace(/^www\./i,'');
+    const bits = clean.split(/[\/]/).filter(Boolean);
+    return (bits[bits.length - 1] || "").replace(/^@/,'');
+  }
+
+  function extractLinkUsername(pretty){
+    const parts = String(pretty || "").split("/").filter(Boolean);
+    const cand = (parts[parts.length - 1] || "").replace(/^@/,'');
+    return cand || String(pretty || "").replace(/^@/,'');
+  }
+
+  function buildSocialPill(raw){
+    if (!raw || !raw.trim()) return null;
+    const kind = detectSocialKind(raw);
+    const username = extractUsernameFromUrlish(raw);
+    const href = firstUrl(raw) || (kind === "x" && username ? `https://x.com/${username}` : "");
+    const text = (kind === "x")
+      ? `X: ${username || prettyUrlText(raw)}`
+      : `Social: @${username || prettyUrlText(raw)}`;
+    return createPill(text, "pill-blue", href || undefined);
+  }
+
+  function buildLinkTreePill(raw){
+    if (!raw || !raw.trim()) return null;
+    const url = firstUrl(raw) || raw;
+    const pretty = prettyUrlText(url);
+    const username = extractLinkUsername(pretty);
+    let text = pretty;
+    if (/linktr\.ee/i.test(pretty)) text = `Link Tree: ${username}`;
+    else if (/allmylinks\.com/i.test(pretty)) text = `All my links: ${username}`;
+    else if (/beacons\.ai/i.test(pretty)) text = `Links: Beacons- ${username}`;
+    else text = pretty.replace(/\.com/gi," - ");
+    return createPill(text, "pill-green", url);
+  }
+
+  function buildScatPill(raw){
+    if (!raw || !raw.trim()) return null;
+    const url = firstUrl(raw) || raw;
+    const pretty = prettyUrlText(url);
+    const username = extractLinkUsername(pretty) || pretty;
+    const lower = pretty.toLowerCase();
+    let text = pretty.replace(/\.com/gi," - ");
+    if (lower.includes("scatbook")) text = `Scatbook: ${username}`;
+    else if (lower.includes("darkfans")) text = `Darkfans: ${username}`;
+    return createPill(text, "pill-brown", url);
   }
 
   function appendScamIcon(node, text){
@@ -1470,425 +1579,3 @@
             line.appendChild(l); line.appendChild(v);
             block.appendChild(line);
           }
-
-          if (website.trim()) addLine("Website:", website);
-          if (links.trim()) addLine("Links:", links);
-
-          if (social.trim()) {
-            const kind = detectSocialKind(social);
-            let label = "Social:";
-            if (kind === "x") label = "X:";
-            else if (kind === "bluesky") label = "BlueSky:";
-            addLine(label, social);
-          }
-
-          if (scat.trim()) addLine("Scat link:", scat);
-          if (fet.trim()) addLine("Fetlife:", fet);
-
-          td.appendChild(block);
-          tr.appendChild(td);
-          continue;
-        }
-
-        /* Combined Contact info */
-        if (c === EMAIL_COL_IDX && rIdx > 1) {
-          const emailRaw = row[EMAIL_COL_IDX] || "";
-          const redditRaw = P_COL_IDX >= 0 ? (row[P_COL_IDX] || "") : "";
-          const phoneRaw = Q_COL_IDX >= 0 ? (row[Q_COL_IDX] || "") : "";
-          const whatsappRaw = WHATSAPP_COL_IDX >= 0 ? (row[WHATSAPP_COL_IDX] || "") : "";
-          const block = document.createElement("div");
-          block.className = "stack-block";
-
-          function addMulti(labelBase, raw, builder){
-            if (!raw) return;
-            const parts = String(raw).split(/[;,]/);
-            let idx = 0;
-            for (const part of parts) {
-              const val = part.trim();
-              if (!val) continue;
-              const node = builder(val);
-              if (!node) continue;
-              const line = document.createElement("div");
-              line.className = "stack-line";
-              const l = document.createElement("span");
-              l.className = "stack-label";
-              l.textContent = idx === 0 ? labelBase + ":" : labelBase + " alt:";
-              const v = document.createElement("span");
-              v.className = "stack-value";
-              v.appendChild(node);
-              line.appendChild(l); line.appendChild(v);
-              block.appendChild(line);
-              idx++;
-            }
-          }
-
-          addMulti("Phone", phoneRaw, (val)=>buildTelAnchor(val));
-          addMulti("WhatsApp", whatsappRaw, (val)=>buildWhatsappAnchor(val));
-          addMulti("Email", emailRaw, (val)=>{
-            if (!/@/.test(val)) return null;
-            const a = document.createElement("a");
-            a.href = `mailto:${val.trim()}`;
-            a.textContent = val.trim();
-            a.className = "cell-link";
-            return a;
-          });
-          addMulti("Reddit", redditRaw, (val)=>buildRedditLink(val));
-
-          td.appendChild(block);
-          tr.appendChild(td);
-          continue;
-        }
-
-        /* Verified? + Renown stacked with EMOJIS ABOVE text */
-        if (c === H_COL_IDX && rIdx > 1) {
-          const verRaw = row[H_COL_IDX] || "";
-          const ren = RENOWN_COL_IDX >= 0 ? (row[RENOWN_COL_IDX] || "") : "";
-          const block = document.createElement("div");
-          block.className = "stack-block";
-
-          if (verRaw.trim()) {
-            const vLower = verRaw.toLowerCase();
-            let emojis = "";
-            if (vLower.includes("needs review") || vLower.includes("needs verification")) emojis += "⚠️";
-            if (vLower.includes("scam")) emojis += "🚫";
-            if (vLower.includes("verified")) emojis += "🏅";
-            if (vLower.includes("admin verified")) emojis += "👁️";
-            if (vLower.includes("reddit verified")) emojis += "🙋";
-            if (vLower.includes("fetlife verified")) emojis += "🕸️";
-            if (vLower.includes("seems legit")) emojis += "🤷";
-
-            if (emojis) {
-              const emojiRow = document.createElement("div");
-              emojiRow.className = "verified-emoji-row";
-              emojiRow.textContent = emojis;
-              block.appendChild(emojiRow);
-            }
-
-            const textRow = document.createElement("div");
-            textRow.textContent = verRaw;
-            block.appendChild(textRow);
-          }
-
-          if (ren.trim()) {
-            const r = document.createElement("div");
-            r.className = "stack-muted";
-            r.textContent = ren;
-            appendScamIcon(r, ren);
-            block.appendChild(r);
-          }
-          td.appendChild(block);
-          tr.appendChild(td);
-          continue;
-        }
-
-        /* Experience? + Full Review button stacked */
-        if (c === I_COL_IDX && rIdx > 1) {
-          let exp = row[I_COL_IDX] || "";
-          const linkReview = FULL_REVIEW_COL_IDX >= 0 ? (row[FULL_REVIEW_COL_IDX] || "") : "";
-          const block = document.createElement("div");
-          block.className = "stack-block";
-
-          if (!exp.trim()) {
-            exp = "Needs Review!";
-          }
-
-          const tExp = exp.toString().trim().toLowerCase();
-          let iconSpan = null;
-          if (tExp === "positive") {
-            iconSpan = document.createElement("span");
-            iconSpan.className = "sentiment";
-            iconSpan.textContent = "👍";
-            iconSpan.title = "Positive";
-          } else if (tExp === "negative") {
-            iconSpan = document.createElement("span");
-            iconSpan.className = "sentiment";
-            iconSpan.textContent = "👎";
-            iconSpan.title = "Negative";
-          } else if (tExp === "neutral") {
-            iconSpan = document.createElement("span");
-            iconSpan.className = "sentiment";
-            iconSpan.textContent = "🤷";
-            iconSpan.title = "Neutral";
-          } else if (tExp.includes("needs review")) {
-            iconSpan = document.createElement("span");
-            iconSpan.className = "sentiment";
-            iconSpan.textContent = "🧭";
-            iconSpan.title = "Needs review / uncharted";
-          }
-
-          if (iconSpan) {
-            const line = document.createElement("div");
-            line.className = "stack-line";
-            const lbl = document.createElement("span");
-            lbl.className = "stack-label";
-            lbl.textContent = "Experience:";
-            const v = document.createElement("span");
-            v.className = "stack-value";
-            v.appendChild(iconSpan);
-            const textSpan = document.createElement("span");
-            textSpan.textContent = " " + exp;
-            appendScamIcon(textSpan, exp);
-            v.appendChild(textSpan);
-            line.appendChild(lbl); line.appendChild(v);
-            block.appendChild(line);
-          } else if (exp.trim()) {
-            const line = document.createElement("div");
-            line.textContent = exp;
-            appendScamIcon(line, exp);
-            block.appendChild(line);
-          }
-
-          if (linkReview && URL_RE.test(linkReview)) {
-            const m = linkReview.match(URL_RE);
-            const url = m ? m[1] : null;
-            if (url) {
-              const line = document.createElement("div");
-              line.className = "stack-line";
-              const v = document.createElement("span");
-              v.className = "stack-value";
-              const btn = document.createElement("a");
-              btn.href = url;
-              btn.target = "_blank";
-              btn.rel = "noopener";
-              btn.textContent = "Full Review";
-              btn.className = "btn small";
-              v.appendChild(btn);
-              line.appendChild(v);
-              block.appendChild(line);
-            }
-          }
-
-          td.appendChild(block);
-          tr.appendChild(td);
-          continue;
-        }
-
-        /* Price + badge */
-        if (c === J_COL_IDX && rIdx > 1) {
-          const txtPrice = txt;
-          const n = computePriceNumber(txtPrice);
-          const cleaned = Number.isFinite(n) ? `$${Math.round(n)}` : (txtPrice || "").replace(/(?:high|mid|low|unknown|\?)/gi,'').trim() || "Unknown";
-          const avg = render._tabAvg;
-          let band = "—";
-          if (Number.isFinite(n) && Number.isFinite(avg)) {
-            const diff = n - avg;
-            band = Math.abs(diff) <= 150 ? "average" : (diff > 150 ? "↑ above average" : "↓ below average");
-          }
-          const wrap = document.createElement("div");
-          const main = document.createElement("span"); main.textContent = cleaned;
-          const badge = document.createElement("span"); badge.className = "price-badge"; badge.textContent = ` ${band}`;
-          wrap.appendChild(main); wrap.appendChild(badge);
-          td.appendChild(wrap);
-          tr.appendChild(td);
-          continue;
-        }
-
-        /* Services Provided */
-        if (c === SERVICES_COL_IDX && rIdx > 1) {
-          buildServicesCell(td, txt);
-          tr.appendChild(td);
-          continue;
-        }
-
-        /* Review/notes with scam icon + linkify */
-        if (c === REVIEW_COL_IDX && rIdx > 1) {
-          const wrap = document.createElement("div");
-          wrap.className = "clamp-wrap clamp-3";
-          const frag = linkifyWithMore(txt);
-          if (frag) wrap.appendChild(frag); else wrap.textContent = txt;
-          appendScamIcon(wrap, txt);
-          td.appendChild(wrap);
-          requestAnimationFrame(()=>{
-            if (wrap.scrollHeight > wrap.clientHeight + 1) {
-              const btn = document.createElement("span");
-              btn.className = "moreless"; btn.textContent = " More";
-              btn.addEventListener("click", ()=>{
-                wrap.classList.toggle("clamp-3");
-                btn.textContent = wrap.classList.contains("clamp-3") ? " More" : " Less";
-              });
-              td.appendChild(btn);
-            }
-          });
-          tr.appendChild(td);
-          continue;
-        }
-
-        const frag = linkifyWithMore(txt);
-        if (frag) td.appendChild(frag); else makeTextCell(td, txt, 3);
-
-        tr.appendChild(td);
-      }
-
-      tbody.appendChild(tr);
-    }
-
-    render._tabAvg = _tabAvg;
-
-    for (let i=0; i<rows.length && i<ROW_CAP; i++){
-      const row = rows[i];
-      if (isOnlyColAText(row)) {
-        renderRowByIndex(i);
-      } else {
-        const inGroup = groups.find(g => g.members.includes(i));
-        if (!inGroup) renderDataRow(i, null);
-      }
-    }
-
-    rowTextIndex.clear();
-    tbody.querySelectorAll('tr[data-row-index]').forEach(tr=>{
-      const idx = parseInt(tr.getAttribute('data-row-index'), 10);
-      const row = currentRows[idx] || [];
-      const txt = row.slice(0, MAX_SHOW_COL_IDX + 1).join(" ").toLowerCase();
-      rowTextIndex.set(idx, txt);
-    });
-
-    expandAllBtn.onclick = () => {
-      groups.forEach(g => g.collapsed = false);
-      persistGroups(groups);
-      tbody.querySelectorAll("tr.state-header").forEach(tr => tr.classList.add("expanded"));
-      const members = tbody.querySelectorAll('tr[data-group]');
-      members.forEach(mtr => {
-        mtr.removeAttribute("data-collapsed");
-        const idx = parseInt(mtr.getAttribute("data-row-index"), 10);
-        const row = currentRows[idx];
-        const tdImg = mtr.querySelector("td.imgCol");
-        if (tdImg && imgToggle.checked) buildImageCell(tdImg, row, idx);
-      });
-    };
-    collapseAllBtn.onclick = () => {
-      groups.forEach(g => g.collapsed = true);
-      persistGroups(groups);
-      tbody.querySelectorAll("tr.state-header").forEach(tr => tr.classList.remove("expanded"));
-      tbody.querySelectorAll('tr[data-group]').forEach(tr => tr.setAttribute("data-collapsed","true"));
-    };
-
-    meta.textContent = `src=gviz • gid=${GID} • rows: ${rows.length} (showing ${Math.min(rows.length, ROW_CAP)}) • cols: ${colCount} • ${new Date().toLocaleTimeString()}`;
-
-    restoreScrollFor(GID);
-  }
-
-  function applySearch(q, fromRender=false){
-    lastQuery = (q || "").trim().toLowerCase();
-    const isActive = !!lastQuery;
-
-    const headerRows = tbody.querySelectorAll("tr.state-header");
-    const dataRows   = tbody.querySelectorAll('tr[data-row-index]');
-
-    if (isActive) {
-      headerRows.forEach(h => h.classList.add("expanded"));
-      tbody.querySelectorAll("tr[data-group]").forEach(tr => tr.removeAttribute("data-collapsed"));
-
-      let shown = 0;
-      dataRows.forEach(tr=>{
-        const idx = parseInt(tr.getAttribute("data-row-index"),10);
-        const hay = rowTextIndex.get(idx) || "";
-        const match = hay.includes(lastQuery);
-        tr.classList.toggle("search-row-hide", !match);
-        if (match) shown++;
-      });
-
-      const sticky = tbody.querySelector('tr[data-row-index="1"]');
-      if (sticky) sticky.classList.remove("search-row-hide");
-      tbody.querySelectorAll("tr.is-hidden").forEach(tr => tr.classList.add("search-row-hide"));
-
-      meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
-      meta.textContent += ` • matches: ${shown}`;
-    } else {
-      tbody.querySelectorAll("tr").forEach(tr => tr.classList.remove("search-row-hide"));
-      if (!fromRender && currentRows.length) render({ rows: currentRows, colCount: currentColCount });
-      meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
-    }
-  }
-  const debouncedSearch = debounce(()=>applySearch(searchBox.value), 120);
-
-  function saveScrollFor(gid, top){ try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {} }
-  function loadScrollFor(gid){ try { const v = localStorage.getItem(SCROLL_KEY_PREFIX + gid); return v ? parseInt(v, 10) || 0 : 0; } catch { return 0; } }
-  const debouncedSaveScroll = debounce(()=>{ saveScrollFor(GID, scrollWrap.scrollTop || 0); }, 120);
-
-  async function load(){
-    saveScrollFor(GID, scrollWrap.scrollTop || 0);
-    meta.textContent = "loading…";
-    try {
-      const pack = await fetchRect();
-      render(pack);
-      if (lastQuery) applySearch(lastQuery, true);
-    } catch(e){
-      console.error(e);
-      meta.textContent = "Error loading GViz (check sharing / range).";
-    }
-  }
-  let timer=null;
-  function startPolling(){ if (timer) clearInterval(timer); timer = setInterval(load, POLL_MS); }
-
-  $$(".button-row .btn").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      saveScrollFor(GID, scrollWrap.scrollTop || 0);
-      $$(".button-row .btn").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      GID = btn.dataset.gid;
-      try { localStorage.setItem(ACTIVE_GID_KEY, GID); } catch {}
-      sortSpec = loadSort(GID);
-      await load();
-      if (lastQuery) applySearch(lastQuery);
-    });
-  });
-
-  searchBox.addEventListener("input", debouncedSearch);
-  clearSearchBtn.addEventListener("click", ()=>{
-    searchBox.value = "";
-    applySearch("");
-    searchBox.focus();
-  });
-
-  scrollWrap.addEventListener("scroll", debouncedSaveScroll);
-
-  imgToggle.addEventListener("change", ()=>{
-    saveShowImages(imgToggle.checked);
-    if (currentRows.length) {
-      const prevTop = scrollWrap.scrollTop || 0;
-      render({ rows: currentRows, colCount: currentColCount });
-      scrollWrap.scrollTop = prevTop;
-    }
-  });
-
-  resetSortBtn.addEventListener("click", ()=>{
-    sortSpec = null; persistSort(GID, null);
-    if (currentRows.length) { const prevTop = scrollWrap.scrollTop || 0; render({ rows: currentRows, colCount: currentColCount }); scrollWrap.scrollTop = prevTop; }
-  });
-
-  downloadCsvBtn.addEventListener("click", ()=>{
-    if (!currentRows || !currentRows.length){
-      alert("No data loaded yet.");
-      return;
-    }
-    const tabName = (TABS.find(t => t.gid === GID)?.name || "data").toLowerCase().replace(/\s+/g,'-');
-    const rows = currentRows.map(r => r.slice(0, MAX_SHOW_COL_IDX + 1));
-    downloadCSV(`ftt-${tabName}.csv`, rows);
-  });
-
-  function restoreScrollFor(gid){
-    const targetTop = loadScrollFor(gid);
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ scrollWrap.scrollTop = targetTop; }));
-  }
-
-  (async function boot(){
-    try {
-      const stored = localStorage.getItem(ACTIVE_GID_KEY);
-      if (stored && $(`.button-row .btn[data-gid="${stored}"]`)) {
-        GID = stored;
-        $$(".button-row .btn").forEach(b=>b.classList.toggle("active", b.dataset.gid === GID));
-      }
-    } catch {}
-    const v = localStorage.getItem("ftt-show-images");
-    const showImages = (v === null ? true : v === "true");
-    imgToggle.checked = showImages;
-    document.body.classList.toggle("hide-images", !showImages);
-
-    sortSpec = loadSort(GID);
-
-    await load();
-    startPolling();
-  })();
-  </script>
-</body>
-</html>

@@ -367,6 +367,7 @@
     .pill.orange{ background:#e07b39; }
     .pill.red{ background:#b35656; color:#fff; }
     .pill.dark-red{ background:#8f4a4a; color:#fff; }
+    .pill.black{ background:#000; color:#fff; }
 
     .footer-bar{
       padding:10px 12px;
@@ -685,6 +686,7 @@
   const searchBox = $("#searchBox");
   const clearSearchBtn = $("#clearSearch");
   const resetSortBtn = $("#resetSort");
+  const regionButtons = $$('button[data-gid]');
   const downloadCsvBtns = $$(".download-csv-btn");
   const scrollWrap = $("#scrollWrap");
 
@@ -1002,7 +1004,7 @@
       let w = 150;
       if (i < 3) w = 170;
       if (WIDE_IDX.includes(i)) w = 280;
-      if (i === E_COL_IDX) w = 810;              // Links block
+      if (i === E_COL_IDX) w = 405;              // Links block
       if (i === EMAIL_COL_IDX) w = 320;          // Contact info
       if (i === SERVICES_COL_IDX) w = 420;       // Services Provided wider
 
@@ -1313,6 +1315,21 @@
     return null;
   }
 
+  function isMeaningfulLinkText(text){
+    const t = norm(text);
+    return !!t && t !== "none" && t !== "n/a";
+  }
+
+  function isXUrl(url){
+    if (!url) return false;
+    try {
+      const host = (new URL(url)).hostname.toLowerCase();
+      return /(^|\.)x\.com$/.test(host) || /(^|\.)twitter\.com$/.test(host);
+    } catch {
+      return /x\.com/i.test(url);
+    }
+  }
+
   function extractHandleFromUrlish(text){
     if (!text) return "";
     const urlMatch = text.match(URL_RE);
@@ -1365,6 +1382,45 @@
     if (/scatbook/i.test(host)) return { text: `Scatbook: ${handle || pretty}`, dropLabel: true };
     if (/darkfans/i.test(host)) return { text: `Darkfans: ${handle || pretty}`, dropLabel: true };
     return { text: pretty.replace(/\.com/gi," - "), dropLabel: false };
+  }
+
+  function buildGenderBadge(raw){
+    const text = (raw || "").trim();
+    if (!text) return null;
+    const lower = text.toLowerCase();
+    const prefersNoAnswer = /prefer not to answer/.test(lower);
+    if (prefersNoAnswer) return null;
+
+    const map = [
+      { match: /cis woman/, symbol: "♀️", label: "Cis Woman" },
+      { match: /trans woman/, symbol: "⚧️", label: "Trans Woman" },
+      { match: /cis man/, symbol: "♂️", label: "Cis Man" },
+      { match: /trans man/, symbol: "⚧️", label: "Trans Man" },
+    ];
+
+    for (const entry of map) {
+      if (entry.match.test(lower)) {
+        const span = document.createElement("span");
+        span.textContent = entry.symbol;
+        span.title = entry.label;
+        span.setAttribute("aria-label", entry.label);
+        return span;
+      }
+    }
+
+    if (/neutral|none|both|unknown/.test(lower)) {
+      const span = document.createElement("span");
+      span.textContent = "🏳️‍🌈";
+      span.title = text;
+      span.setAttribute("aria-label", text);
+      return span;
+    }
+
+    const span = document.createElement("span");
+    span.textContent = text;
+    span.title = text;
+    span.setAttribute("aria-label", text);
+    return span;
   }
 
   function appendScamIcon(node, text){
@@ -1534,8 +1590,11 @@
           if (gender.trim()) {
             const gLine = document.createElement("div");
             gLine.className = "stack-muted";
-            gLine.textContent = `(${gender.trim()})`;
-            block.appendChild(gLine);
+            const badge = buildGenderBadge(gender);
+            if (badge) {
+              gLine.appendChild(badge);
+              block.appendChild(gLine);
+            }
           }
           td.appendChild(block);
           tr.appendChild(td);
@@ -1629,29 +1688,32 @@
             pill.href = url;
             pill.target = "_blank";
             pill.rel = "noopener";
-            pill.className = `pill ${color || ""}`;
+            const pillClasses = ["pill"];
+            if (isXUrl(url)) pillClasses.push("black");
+            else if (color) pillClasses.push(color);
+            pill.className = pillClasses.join(" ");
             pill.textContent = text;
             v.appendChild(pill);
             line.appendChild(v);
             block.appendChild(line);
           }
 
-            if (website.trim()) {
+            if (isMeaningfulLinkText(website)) {
               const url = firstUrl(website) || website.trim();
               addPill(prettyUrlText(url), url, "red");
             }
 
-          if (links.trim()) {
+          if (isMeaningfulLinkText(links)) {
             const url = firstUrl(links) || links.trim();
             addPill(formatLinksDisplay(links), url, "green");
           }
 
-          if (social.trim()) {
+          if (isMeaningfulLinkText(social)) {
             const url = firstUrl(social) || social.trim();
             addPill(formatSocialDisplay(social), url, "blue");
           }
 
-            if (scat.trim()) {
+            if (isMeaningfulLinkText(scat)) {
               const url = firstUrl(scat) || scat.trim();
               const scatFmt = formatScatDisplay(scat);
               if (scatFmt.dropLabel) {
@@ -1660,7 +1722,7 @@
                 addPill(`Scat link: ${scatFmt.text}`, url, "brown");
               }
             }
-            if (fet.trim()) {
+            if (isMeaningfulLinkText(fet)) {
               const url = firstUrl(fet) || fet.trim();
               addPill(prettyUrlText(url), url, "dark-red");
             }
@@ -2002,11 +2064,14 @@
   let timer=null;
   function startPolling(){ if (timer) clearInterval(timer); timer = setInterval(load, POLL_MS); }
 
-  $$(".button-row .btn").forEach(btn=>{
+  function setActiveRegion(gid){
+    regionButtons.forEach(b => b.classList.toggle("active", b.dataset.gid === gid));
+  }
+
+  regionButtons.forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       saveScrollFor(GID, scrollWrap.scrollTop || 0);
-      $$(".button-row .btn").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
+      setActiveRegion(btn.dataset.gid);
       GID = btn.dataset.gid;
       try { localStorage.setItem(ACTIVE_GID_KEY, GID); } catch {}
       sortSpec = loadSort(GID);
@@ -2058,9 +2123,9 @@
   (async function boot(){
     try {
       const stored = localStorage.getItem(ACTIVE_GID_KEY);
-      if (stored && $(`.button-row .btn[data-gid="${stored}"]`)) {
+      if (stored && regionButtons.some(b => b.dataset.gid === stored)) {
         GID = stored;
-        $$(".button-row .btn").forEach(b=>b.classList.toggle("active", b.dataset.gid === GID));
+        setActiveRegion(GID);
       }
     } catch {}
     const v = localStorage.getItem("ftt-show-images");
@@ -2069,6 +2134,7 @@
     document.body.classList.toggle("hide-images", !showImages);
 
     sortSpec = loadSort(GID);
+    setActiveRegion(GID);
 
     await load();
     startPolling();

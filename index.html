@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -346,6 +345,67 @@
     .search-row-hide { display: none !important; }
 
     .sentiment { font-size:18px; line-height:1; }
+
+    .experience-block{ gap:8px; }
+    .experience-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:16px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.14);
+      border:1px solid transparent;
+      position:relative;
+      cursor:default;
+      min-width:48px;
+      transition:transform .1s ease, box-shadow .1s ease;
+    }
+    .experience-pill:hover{ box-shadow:0 2px 6px rgba(0,0,0,0.16); transform:translateY(-1px); }
+    .experience-pill:focus-visible, .experience-pill.show-tooltip{ outline:2px solid #1f6feb; outline-offset:2px; }
+    .experience-pill.positive{ background:#d7f5e6; color:#0f5132; border-color:#b6e3c4; }
+    .experience-pill.negative{ background:#ffe0e0; color:#7a1f1f; border-color:#f5b8b8; }
+    .experience-pill.neutral{ background:#fff3cd; color:#533f03; border-color:#ffe69c; }
+    .experience-pill::after{
+      content: attr(data-label);
+      position:absolute;
+      left:50%;
+      bottom: calc(100% + 10px);
+      transform:translate(-50%, 6px);
+      background:#111827;
+      color:#fff;
+      padding:6px 10px;
+      border-radius:8px;
+      font-size:12px;
+      white-space:nowrap;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .15s ease, transform .15s ease;
+      z-index:5;
+    }
+    .experience-pill::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom: calc(100% + 2px);
+      transform:translate(-50%, 6px);
+      border:6px solid transparent;
+      border-top-color:#111827;
+      opacity:0;
+      transition:opacity .15s ease, transform .15s ease;
+      z-index:4;
+    }
+    .experience-pill:hover::after,
+    .experience-pill:hover::before,
+    .experience-pill:focus-visible::after,
+    .experience-pill:focus-visible::before,
+    .experience-pill.show-tooltip::after,
+    .experience-pill.show-tooltip::before{
+      opacity:1;
+      transform:translate(-50%, 0);
+    }
 
     .pill{
       display:inline-flex;
@@ -1912,59 +1972,44 @@
           continue;
         }
 
-        /* Experience? + Full Review button stacked */
+        /* Experience? with emoji-only pills + Full Review button stacked */
         if (c === I_COL_IDX && rIdx > 1) {
           let exp = row[I_COL_IDX] || "";
           const linkReview = FULL_REVIEW_COL_IDX >= 0 ? (row[FULL_REVIEW_COL_IDX] || "") : "";
           const block = document.createElement("div");
-          block.className = "stack-block";
+          block.className = "stack-block experience-block";
 
           if (!exp.trim()) {
             exp = "Needs review!";
           }
 
-          const tExp = exp.toString().trim().toLowerCase();
-          const needsReview = tExp.includes("needs review");
-          let iconSpan = null;
-          if (tExp === "positive") {
-            iconSpan = document.createElement("span");
-            iconSpan.className = "sentiment";
-            iconSpan.textContent = "👍";
-            iconSpan.title = "Positive";
-          } else if (tExp === "negative") {
-            iconSpan = document.createElement("span");
-            iconSpan.className = "sentiment";
-            iconSpan.textContent = "👎";
-            iconSpan.title = "Negative";
-          } else if (tExp === "neutral") {
-            iconSpan = document.createElement("span");
-            iconSpan.className = "sentiment";
-            iconSpan.textContent = "🤷";
-            iconSpan.title = "Neutral";
+          const expText = exp.toString().trim();
+          const tExp = expText.toLowerCase();
+          let emoji = "❔";
+          let tone = "neutral";
+
+          if (tExp.includes("positive")) {
+            emoji = "👍";
+            tone = "positive";
+          } else if (tExp.includes("negative")) {
+            emoji = "👎";
+            tone = "negative";
+          } else if (tExp.includes("neutral") || tExp.includes("mixed")) {
+            emoji = "🤷";
+            tone = "neutral";
           }
 
-          if (iconSpan || needsReview) {
-            const line = document.createElement("div");
-            line.className = "stack-line";
-            const lbl = document.createElement("span");
-            lbl.className = "stack-label";
-            lbl.textContent = "Experience:";
-            const v = document.createElement("span");
-            v.className = "stack-value";
-            if (iconSpan) v.appendChild(iconSpan);
-            const textSpan = document.createElement("span");
-            const needsReviewText = needsReview ? `${exp}❓` : exp;
-            textSpan.textContent = iconSpan ? ` ${needsReviewText}` : needsReviewText;
-            appendScamIcon(textSpan, exp);
-            v.appendChild(textSpan);
-            line.appendChild(lbl); line.appendChild(v);
-            block.appendChild(line);
-          } else if (exp.trim()) {
-            const line = document.createElement("div");
-            line.textContent = exp;
-            appendScamIcon(line, exp);
-            block.appendChild(line);
-          }
+          const pill = document.createElement("span");
+          pill.className = `experience-pill ${tone}`;
+          pill.textContent = emoji;
+          pill.title = expText;
+          pill.setAttribute("aria-label", expText);
+          pill.setAttribute("data-label", expText);
+          pill.tabIndex = 0;
+          pill.addEventListener("click", () => pill.classList.toggle("show-tooltip"));
+          pill.addEventListener("blur", () => pill.classList.remove("show-tooltip"));
+          appendScamIcon(pill, expText);
+          block.appendChild(pill);
 
           if (linkReview && URL_RE.test(linkReview)) {
             const m = linkReview.match(URL_RE);

@@ -1510,7 +1510,25 @@
   function formatSocialDisplay(raw){
     const kind = detectSocialKind(raw);
     const handle = extractHandleFromUrlish(raw);
-    if (kind === "x") return `X: ${handle || prettyUrlText(raw)}`;
+    if (kind === "x") {
+      const disp = handle ? `@${handle.replace(/^@/, "")}` : prettyUrlText(raw);
+      return `X: ${disp}`;
+    }
+    if (kind === "bluesky") {
+      let bskyHandle = "";
+      try {
+        const urlMatch = raw && raw.match(URL_RE);
+        if (urlMatch) {
+          const u = new URL(urlMatch[1]);
+          const path = u.pathname || "";
+          const m = path.match(/\/profile\/([^/]+)/i);
+          if (m) bskyHandle = m[1];
+        }
+      } catch {}
+      if (bskyHandle) bskyHandle = bskyHandle.replace(/\.bsky\.social$/i, "");
+      const disp = bskyHandle ? `@${bskyHandle.replace(/^@/, "")}` : (handle ? `@${handle.replace(/^@/, "")}` : prettyUrlText(raw));
+      return `bsky: ${disp}`;
+    }
     const disp = handle ? `@${handle.replace(/^@/,"")}` : prettyUrlText(raw);
     return `Social: ${disp}`;
   }

@@ -14,179 +14,110 @@
   <link rel="dns-prefetch" href="//www.google.com">
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap');
-
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     :root{
-      --brand:#005fb8;
-      --bg:#f3f8ff;
+      --brand:#0078d7;
+      --bg:#ecf7ff;
       --panel:#fff;
-      --text:#162031;
+      --text:#222;
       --line:#e9eef4;
       --line-2:#e0e6ee;
-      --accent:#0f62fe;
+      --accent:#0063b1;
       --state:#0a2236;
-      --muted:#5b6575;
-      --toilet:#d4e7ff;
     }
     body {
       margin: 0;
       background:
-        radial-gradient(circle at 14px 18px, #ffffff 0, #ffffff 26px, transparent 26px),
-        radial-gradient(circle at 60px 70px, #dfefff 0, #dfefff 24px, transparent 24px),
-        linear-gradient(#e8f1ff, #f6f9ff);
-      background-size: 120px 120px, 120px 120px, auto;
+        radial-gradient(circle at 0 0, #ffffff 0, #ffffff 24px, transparent 24px),
+        radial-gradient(circle at 24px 24px, #dfefff 0, #dfefff 24px, transparent 24px),
+        linear-gradient(#d6ecff, #ecf7ff);
+      background-size: 48px 48px, 48px 48px, auto;
       background-position: 0 0, 0 0, 0 0;
       color: var(--text);
-      font-family: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       display: flex;
       flex-direction: column;
     }
 
-    .page-shell{
-      max-width: 1400px;
-      margin: 0 auto;
-      width: calc(100% - 32px);
-    }
-
     header {
       display: grid;
-      gap: 18px;
-      padding: 16px 0 6px;
+      gap: 8px;
+      padding: 10px 12px 12px;
       color: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.18);
       position: relative;
       overflow: hidden;
-    }
-    header::before{
-      content:"";
-      position:absolute;
-      inset:12px;
-      border-radius:24px;
       background:
-        linear-gradient(120deg, rgba(0,95,184,0.96), rgba(15,98,254,0.88)),
+        linear-gradient(135deg, rgba(0,120,215,0.95), rgba(0,120,215,0.88)),
         linear-gradient(#ffffff1a 1px, transparent 1px),
         linear-gradient(90deg,#ffffff1a 1px, transparent 1px);
       background-size: auto, 28px 28px, 28px 28px;
       background-position: 0 0, 0 0, 0 0;
-      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
     }
     /* Subtle "bubbles"/steam overlay for bathroom vibe */
     header::after{
       content:"";
       position:absolute;
-      inset:0;
+      inset:-40px;
       pointer-events:none;
       background:
         radial-gradient(circle at 10% 20%, rgba(255,255,255,0.18) 0, transparent 55%),
         radial-gradient(circle at 80% 10%, rgba(255,255,255,0.16) 0, transparent 55%),
         radial-gradient(circle at 50% 100%, rgba(255,255,255,0.10) 0, transparent 60%);
-      opacity:0.8;
+      opacity:0.9;
       mix-blend-mode: screen;
     }
 
-    .hero-shell{
+    header .top {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
       position:relative;
       z-index:1;
-      display:grid;
-      grid-template-columns:1.3fr 1fr;
-      gap:18px;
-      padding:0 16px;
     }
-    .hero-main{ display:flex; flex-direction:column; gap:10px; }
     h1 {
       margin:0;
-      font-size:24px;
+      font-size:15px;
       font-weight:800;
       line-height:1.1;
       letter-spacing:.2px;
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:6px;
     }
     h1::before{
       content:"🚽";
       display:inline-block;
-      font-size:24px;
+      font-size:18px;
     }
-    .eyebrow{
-      text-transform:uppercase;
-      letter-spacing:2px;
-      font-weight:700;
-      font-size:11px;
-      opacity:0.75;
-      margin:0;
-    }
-    .lede{
-      margin:0;
-      font-size:14px;
-      line-height:1.5;
-      color:#e9f2ff;
-      max-width:720px;
-    }
-
-    .hero-meta-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      align-items:center;
-    }
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:12px;
-      background:#ffffff22;
-      color:#f4f7ff;
-      font-weight:700;
-      border:1px solid rgba(255,255,255,0.25);
-    }
-    .chip .icon{ font-size:14px; }
 
     .top-right{
       display:flex;
-      align-items:flex-start;
-      justify-content:flex-end;
-      gap:10px;
+      align-items:center;
+      gap:8px;
+      margin-left:auto;
       flex-wrap:wrap;
     }
 
-    .meta { display:inline-flex; min-width:220px; }
-
-    .cta-card{
-      background:#ffffff1f;
-      border:1px solid rgba(255,255,255,0.3);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:0 6px 16px rgba(0,0,0,0.12);
-      display:grid;
-      gap:10px;
-    }
-    .cta-title{ margin:0; font-weight:800; font-size:15px; display:flex; align-items:center; gap:8px; }
-    .cta-list{ margin:0; padding-left:18px; color:#eaf2ff; line-height:1.5; font-size:13px; }
-    .cta-actions{ display:flex; flex-wrap:wrap; gap:8px; }
-
-    @media (max-width: 900px){
-      .hero-shell{ grid-template-columns:1fr; }
-      .top-right{ justify-content:flex-start; }
-    }
+    .meta { display:none; }
 
     .button-row {
       display:flex;
       flex-wrap:wrap;
-      gap:8px;
+      gap:6px;
       position:relative;
       z-index:1;
       margin-left: 18px;
-      padding:0 16px 2px;
     }
     .btn {
       color:#fff;
       background:#0063b1;
       border:0;
       border-radius:999px;
-      padding:.40rem .8rem;
+      padding:.40rem .75rem;
       font-weight:700;
       font-size:13px;
       cursor:pointer;
@@ -196,7 +127,6 @@
       align-items:center;
       justify-content:center;
       box-shadow: 0 1px 2px rgba(0,0,0,0.18);
-      gap:6px;
     }
     .btn:active{ transform: translateY(1px); }
     .btn.us{background:#0078d7}
@@ -229,13 +159,6 @@
       justify-content:flex-start;
       position:relative;
       z-index:1;
-      padding: 10px 16px;
-      margin: 0 16px;
-      background:linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.08));
-      border:1px solid rgba(255,255,255,0.20);
-      border-radius:14px;
-      box-shadow:0 10px 18px rgba(0,0,0,0.10);
-      backdrop-filter: blur(2px);
     }
     .controls input[type="search"]{
       padding:8px 10px;
@@ -258,18 +181,6 @@
       border:none;
     }
 
-    .controls .hint{
-      color:#e8f4ff;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 10px;
-      border-radius:10px;
-      background:#ffffff1e;
-      font-weight:700;
-      border:1px solid rgba(255,255,255,0.2);
-    }
-
     .consent-bar{
       display:flex;
       flex-wrap:wrap;
@@ -290,18 +201,7 @@
       text-decoration:underline;
     }
 
-    main { display:flex; flex-direction:column; flex:1; min-height:0; gap:14px; padding: 0 0 18px; }
-
-    .content-panel{
-      margin: 0 auto;
-      width: 100%;
-      max-width: 1440px;
-      background: var(--panel);
-      border-radius: 18px;
-      box-shadow: 0 16px 32px rgba(22, 32, 49, 0.08);
-      border:1px solid #e2e8f3;
-      overflow:hidden;
-    }
+    main { display:flex; flex-direction:column; flex:1; min-height:0; }
 
     .table-wrap {
       flex:1;
@@ -332,7 +232,6 @@
       background: var(--panel);
     }
     tbody tr:nth-child(2n){ background:#fafcff; }
-    tbody tr:hover td{ background:#f0f5ff; }
 
     tbody tr.is-hidden { display: none; }
     tbody tr.sticky-second td {
@@ -530,7 +429,7 @@
     .pill.black{ background:#000; color:#fff; }
 
     .footer-bar{
-      padding:12px 16px 14px;
+      padding:10px 12px;
       color:#fff;
       background:
         linear-gradient(135deg, rgba(0,120,215,0.92), rgba(0,120,215,0.86)),
@@ -542,7 +441,6 @@
       position: sticky;
       bottom: 0;
       z-index: 3;
-      border-radius: 14px 14px 0 0;
     }
 
     .footer-content{
@@ -705,127 +603,102 @@
 </head>
 <body>
   <header>
-    <div class="page-shell">
-      <div class="hero-shell">
-        <div class="hero-main">
-          <p class="eyebrow">Full Toilet Tastemakers</p>
-          <h1>FTT Big List</h1>
-          <p class="lede">
-            A polished directory for finding dommes by region, experience, and services. Browse with confidence,
-            filter by what matters, and follow links without leaving the porcelain-inspired vibe.
-          </p>
-          <div class="hero-meta-row">
-            <span class="chip"><span class="icon">🧻</span>Directory refreshed often</span>
-            <span class="chip"><span class="icon">🛁</span>Tap state bars to collapse/expand</span>
-            <span class="chip meta" id="meta">loading…</span>
-          </div>
-        </div>
-        <div class="top-right">
-          <div class="cta-card" aria-label="Helpful actions">
-            <p class="cta-title">🚿 Quick actions</p>
-            <ul class="cta-list">
-              <li>Download the latest CSV for offline browsing.</li>
-              <li>Submit updates through the community form.</li>
-              <li>Visit r/FullToiletMistresses for mod contact.</li>
-            </ul>
-            <div class="cta-actions">
-              <button id="downloadCsvBtn" class="btn download download-csv-btn">⬇️ Download CSV</button>
-              <a
-                class="btn submit"
-                href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
-                target="_blank"
-                rel="noopener"
-              >
-                Submit to list
-              </a>
-              <a
-                class="btn reddit"
-                href="https://www.reddit.com/r/FullToiletMistresses/"
-                target="_blank"
-                rel="noopener"
-              >
-                Reddit
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="top">
+      <h1>FTT Big List</h1>
 
-      <div class="button-row" role="navigation" aria-label="Tabs">
-        <button class="btn us active"      data-gid="0">United States</button>
-        <button class="btn canada"         data-gid="918890863">Canada</button>
-        <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
-        <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
-        <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
-        <button class="btn mideast"        data-gid="1604960979">Middle East</button>
-      </div>
-
-      <div class="controls">
-        <input id="searchBox" type="search" placeholder="Search for dommes, cities, or services…" />
-        <label class="filter-toggle">
-          <input id="verifiedOnlyToggle" type="checkbox" />
-          Verified only
-        </label>
-        <button id="clearSearch" class="btn" style="background:#666">Clear</button>
-
-        <label class="switch" title="Toggle row thumbnails">
-          <input id="imgToggle" type="checkbox" />
-          Show images
-        </label>
-
-        <button id="expandAll" class="btn" style="background:#3aa655">Expand all</button>
-        <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
-        <span class="linkish" id="resetSort">Reset sorting</span>
-        <span class="hint">Tip: click a profile image to open it full size.</span>
-      </div>
-
-      <div class="consent-bar">
-        <span>Consent is important. To add, update, or remove an entry, please use the community input form:</span>
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header" target="_blank" rel="noopener">
-          Open community form
+      <div class="top-right">
+        <div class="meta" id="meta">loading…</div>
+        <button id="downloadCsvBtn" class="btn download download-csv-btn">⬇️ Download CSV</button>
+        <a
+          class="btn submit"
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
+          target="_blank"
+          rel="noopener"
+        >
+          Submit to list
+        </a>
+        <a
+          class="btn reddit"
+          href="https://www.reddit.com/r/FullToiletMistresses/"
+          target="_blank"
+          rel="noopener"
+        >
+          Reddit
         </a>
       </div>
     </div>
+
+    <div class="button-row" role="navigation" aria-label="Tabs">
+      <button class="btn us active"      data-gid="0">United States</button>
+      <button class="btn canada"         data-gid="918890863">Canada</button>
+      <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
+      <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
+      <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
+      <button class="btn mideast"        data-gid="1604960979">Middle East</button>
+    </div>
+
+    <div class="controls">
+      <input id="searchBox" type="search" placeholder="Search…" />
+      <label class="filter-toggle">
+        <input id="verifiedOnlyToggle" type="checkbox" />
+        Verified only
+      </label>
+      <button id="clearSearch" class="btn" style="background:#666">Clear</button>
+
+      <label class="switch" title="Toggle row thumbnails">
+        <input id="imgToggle" type="checkbox" />
+        Show images
+      </label>
+
+      <button id="expandAll" class="btn" style="background:#3aa655">Expand all</button>
+      <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
+      <span class="linkish" id="resetSort">Reset sorting</span>
+    </div>
+
+    <div class="consent-bar">
+      <span>Consent is important. To add, update, or remove an entry, please use the community input form:</span>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header" target="_blank" rel="noopener">
+        Open community form
+      </a>
+    </div>
   </header>
 
-  <main class="page-shell">
-    <div class="content-panel">
-      <div class="table-wrap" id="scrollWrap">
-        <table id="tbl" aria-live="polite">
-          <colgroup id="colg"></colgroup>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-      <div class="footer-bar" role="navigation" aria-label="Footer actions">
-        <div class="footer-content">
-          <div class="footer-tabs-row">
-            <button class="btn us"      data-gid="0">United States</button>
-            <button class="btn canada"         data-gid="918890863">Canada</button>
-            <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
-            <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
-            <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
-            <button class="btn mideast"        data-gid="1604960979">Middle East</button>
-          </div>
-          <button class="footer-toggle-btn" id="footerCollapseBtn" aria-label="Hide footer actions" title="Hide footer actions">▼</button>
-          <div class="footer-tabs-row actions-row">
-            <button class="btn download download-csv-btn">⬇️ Download CSV</button>
-            <a
-              class="btn submit"
-              href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
-              target="_blank"
-              rel="noopener"
-            >
-              Submit to list
-            </a>
-            <a
-              class="btn reddit"
-              href="https://www.reddit.com/r/FullToiletMistresses/"
-              target="_blank"
-              rel="noopener"
-            >
-              Reddit
-            </a>
-          </div>
+  <main>
+    <div class="table-wrap" id="scrollWrap">
+      <table id="tbl" aria-live="polite">
+        <colgroup id="colg"></colgroup>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="footer-bar" role="navigation" aria-label="Footer actions">
+      <div class="footer-content">
+        <div class="footer-tabs-row">
+          <button class="btn us"      data-gid="0">United States</button>
+          <button class="btn canada"         data-gid="918890863">Canada</button>
+          <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
+          <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
+          <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
+          <button class="btn mideast"        data-gid="1604960979">Middle East</button>
+        </div>
+        <button class="footer-toggle-btn" id="footerCollapseBtn" aria-label="Hide footer actions" title="Hide footer actions">▼</button>
+        <div class="footer-tabs-row actions-row">
+          <button class="btn download download-csv-btn">⬇️ Download CSV</button>
+          <a
+            class="btn submit"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
+            target="_blank"
+            rel="noopener"
+          >
+            Submit to list
+          </a>
+          <a
+            class="btn reddit"
+            href="https://www.reddit.com/r/FullToiletMistresses/"
+            target="_blank"
+            rel="noopener"
+          >
+            Reddit
+          </a>
         </div>
       </div>
     </div>

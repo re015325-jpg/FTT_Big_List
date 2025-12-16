@@ -395,6 +395,21 @@
       z-index: 3;
     }
 
+    .footer-bar .footer-toggle-btn{
+      margin-left: auto;
+      background:#ffffff22;
+      color:#fff;
+      border:1px solid rgba(255,255,255,0.55);
+      border-radius:12px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:800;
+      font-size:16px;
+      line-height:1;
+      box-shadow:0 1px 2px rgba(0,0,0,0.18);
+    }
+    .footer-bar .footer-toggle-btn:active{ transform:translateY(1px); }
+
     .footer-bar .footer-tabs-row{
       display:flex;
       flex-wrap:wrap;
@@ -408,7 +423,38 @@
       font-weight:750;
       box-shadow:0 1px 2px rgba(0,0,0,0.16);
     }
-    .linkish{ color:#0a5a7a; cursor:pointer; text-decoration:underline; }
+
+    .footer-expand-tab{
+      position:fixed;
+      bottom:12px;
+      right:12px;
+      background:
+        linear-gradient(135deg, rgba(0,120,215,0.95), rgba(0,120,215,0.88)),
+        linear-gradient(#ffffff1a 1px, transparent 1px),
+        linear-gradient(90deg,#ffffff1a 1px, transparent 1px);
+      background-size: auto, 28px 28px, 28px 28px;
+      background-position: 0 0, 0 0, 0 0;
+      border:1px solid rgba(255,255,255,0.55);
+      border-radius:12px 12px 6px 6px;
+      padding:12px 14px;
+      color:#fff;
+      display:none;
+      align-items:center;
+      gap:8px;
+      font-weight:800;
+      cursor:pointer;
+      z-index:4;
+      box-shadow:0 2px 6px rgba(0,0,0,0.18);
+    }
+    .footer-expand-tab:active{ transform:translateY(1px); }
+    body.footer-collapsed .footer-bar{ display:none; }
+    body.footer-collapsed .footer-expand-tab{ display:flex; }
+
+    @media (max-width: 640px){
+      .footer-bar .footer-toggle-btn{ padding:10px 12px; font-size:18px; }
+      .footer-expand-tab{ bottom:14px; right:10px; padding:14px; border-radius:14px 14px 8px 8px; }
+    }
+    .linkish{ color:#fff; cursor:pointer; text-decoration:underline; }
 
     .footer-consent{
       padding:0 12px 10px;
@@ -574,7 +620,10 @@
           Reddit
         </a>
       </div>
+      <button class="footer-toggle-btn" id="footerCollapseBtn" aria-label="Hide footer actions" title="Hide footer actions">▼</button>
     </div>
+
+    <button class="footer-expand-tab" id="footerExpandBtn" aria-label="Show footer actions" title="Show footer actions">▲</button>
 
     <div class="footer-consent">
       Consent is important. If you are on the list and want to be removed, please
@@ -700,6 +749,8 @@
   const regionButtons = $$('button[data-gid]');
   const downloadCsvBtns = $$(".download-csv-btn");
   const scrollWrap = $("#scrollWrap");
+  const footerCollapseBtn = $("#footerCollapseBtn");
+  const footerExpandBtn = $("#footerExpandBtn");
 
   /** ==== State ==== */
   let currentRows = [];
@@ -1481,6 +1532,7 @@
         if (rIdx === 1) tr.classList.add("sticky-second");
         tr.classList.add("state-header");
         if (!g.collapsed) tr.classList.add("expanded");
+        tr.setAttribute("data-group-id", String(g.headerIndex));
 
         const td = document.createElement("td");
         td.colSpan = 1 + (MAX_SHOW_COL_IDX + 1);
@@ -2021,6 +2073,18 @@
     meta.textContent = `src=gviz • gid=${GID} • rows: ${rows.length} (showing ${Math.min(rows.length, ROW_CAP)}) • cols: ${colCount} • ${new Date().toLocaleTimeString()}`;
 
     restoreScrollFor(GID);
+    updateGroupVisibility();
+  }
+
+  function updateGroupVisibility(){
+    const headers = tbody.querySelectorAll("tr.state-header");
+    headers.forEach(header => {
+      const gid = header.getAttribute("data-group-id");
+      if (!gid) { header.style.display = ""; return; }
+      const members = tbody.querySelectorAll(`tr[data-group="${gid}"]`);
+      const hasVisibleMember = Array.from(members).some(tr => !tr.classList.contains("search-row-hide"));
+      header.style.display = hasVisibleMember ? "" : "none";
+    });
   }
 
   function applySearch(q, fromRender=false){
@@ -2057,6 +2121,7 @@
       if (!fromRender && currentRows.length) render({ rows: currentRows, colCount: currentColCount });
       meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
     }
+    updateGroupVisibility();
   }
   const debouncedSearch = debounce(()=>applySearch(searchBox.value), 120);
 
@@ -2139,6 +2204,15 @@
   }
 
   downloadCsvBtns.forEach(btn => btn.addEventListener("click", handleDownloadClick));
+
+  function setFooterCollapsed(collapsed){
+    document.body.classList.toggle("footer-collapsed", collapsed);
+    if (footerCollapseBtn) footerCollapseBtn.setAttribute("aria-expanded", String(!collapsed));
+    if (footerExpandBtn) footerExpandBtn.setAttribute("aria-expanded", String(!collapsed));
+  }
+  if (footerCollapseBtn) footerCollapseBtn.addEventListener("click", ()=> setFooterCollapsed(true));
+  if (footerExpandBtn) footerExpandBtn.addEventListener("click", ()=> setFooterCollapsed(false));
+  setFooterCollapsed(false);
 
   function restoreScrollFor(gid){
     const targetTop = loadScrollFor(gid);

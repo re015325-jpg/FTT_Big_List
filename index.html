@@ -177,6 +177,12 @@
       outline: none;
       background:#fdfefe;
     }
+    .controls .filter-toggle{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-weight:700;
+    }
     .controls .btn {
       font-size:12px;
       padding:.45rem .65rem;
@@ -509,6 +515,10 @@
 
     <div class="controls">
       <input id="searchBox" type="search" placeholder="Search…" />
+      <label class="filter-toggle">
+        <input id="verifiedOnlyToggle" type="checkbox" />
+        Verified only
+      </label>
       <button id="clearSearch" class="btn" style="background:#666">Clear</button>
 
       <label class="switch" title="Toggle row thumbnails">
@@ -684,6 +694,7 @@
   const expandAllBtn = $("#expandAll");
   const collapseAllBtn = $("#collapseAll");
   const searchBox = $("#searchBox");
+  const verifiedOnlyToggle = $("#verifiedOnlyToggle");
   const clearSearchBtn = $("#clearSearch");
   const resetSortBtn = $("#resetSort");
   const regionButtons = $$('button[data-gid]');
@@ -695,6 +706,7 @@
   let currentColCount = 0;
   let sortSpec = null; // { colIdx, dir: 'asc'|'desc' }
   let lastQuery = "";
+  let verifiedOnly = false;
   let imgCandCache = new Map();
   let rowTextIndex = new Map();
 
@@ -2013,7 +2025,8 @@
 
   function applySearch(q, fromRender=false){
     lastQuery = (q || "").trim().toLowerCase();
-    const isActive = !!lastQuery;
+    const hasQuery = !!lastQuery;
+    const isActive = hasQuery || verifiedOnly;
 
     const headerRows = tbody.querySelectorAll("tr.state-header");
     const dataRows   = tbody.querySelectorAll('tr[data-row-index]');
@@ -2026,7 +2039,9 @@
       dataRows.forEach(tr=>{
         const idx = parseInt(tr.getAttribute("data-row-index"),10);
         const hay = rowTextIndex.get(idx) || "";
-        const match = hay.includes(lastQuery);
+        const matchesQuery = !hasQuery || hay.includes(lastQuery);
+        const matchesVerified = !verifiedOnly || isRowVerified(idx);
+        const match = matchesQuery && matchesVerified;
         tr.classList.toggle("search-row-hide", !match);
         if (match) shown++;
       });
@@ -2044,6 +2059,12 @@
     }
   }
   const debouncedSearch = debounce(()=>applySearch(searchBox.value), 120);
+
+  function isRowVerified(idx){
+    const row = currentRows[idx] || [];
+    const verifiedText = row[H_COL_IDX] || "";
+    return norm(verifiedText).includes("verified");
+  }
 
   function saveScrollFor(gid, top){ try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {} }
   function loadScrollFor(gid){ try { const v = localStorage.getItem(SCROLL_KEY_PREFIX + gid); return v ? parseInt(v, 10) || 0 : 0; } catch { return 0; } }
@@ -2081,6 +2102,10 @@
   });
 
   searchBox.addEventListener("input", debouncedSearch);
+  verifiedOnlyToggle.addEventListener("change", ()=>{
+    verifiedOnly = verifiedOnlyToggle.checked;
+    applySearch(searchBox.value);
+  });
   clearSearchBtn.addEventListener("click", ()=>{
     searchBox.value = "";
     applySearch("");

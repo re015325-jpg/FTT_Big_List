@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,16 +103,7 @@
       flex-wrap:wrap;
     }
 
-    .meta {
-      margin-left:0;
-      font-size:12px;
-      opacity:.95;
-      background: #ffffff1a;
-      padding:4px 8px;
-      border-radius:999px;
-      backdrop-filter: blur(4px);
-      border:1px solid rgba(255,255,255,0.35);
-    }
+    .meta { display:none; }
 
     .button-row {
       display:flex;
@@ -210,10 +202,11 @@
       text-decoration:underline;
     }
 
-    main { display:flex; flex-direction:column; }
+    main { display:flex; flex-direction:column; flex:1; min-height:0; }
 
     .table-wrap {
-      height: calc(100vh - 224px);
+      flex:1;
+      min-height:0;
       overflow:auto;
       background:var(--panel);
       border-top:1px solid var(--line);
@@ -377,11 +370,6 @@
 
     .footer-bar{
       padding:10px 12px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
       color:#fff;
       background:
         linear-gradient(135deg, rgba(0,120,215,0.92), rgba(0,120,215,0.86)),
@@ -395,13 +383,21 @@
       z-index: 3;
     }
 
+    .footer-content{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      gap:12px;
+      width:100%;
+    }
+
     .footer-bar .footer-toggle-btn{
-      margin-left: auto;
+      justify-self:center;
       background:#ffffff22;
       color:#fff;
       border:1px solid rgba(255,255,255,0.55);
       border-radius:12px;
-      padding:8px 10px;
+      padding:10px 12px;
       cursor:pointer;
       font-weight:800;
       font-size:16px;
@@ -415,6 +411,10 @@
       flex-wrap:wrap;
       gap:6px;
       align-items:center;
+    }
+
+    .footer-bar .footer-tabs-row.actions-row{
+      justify-content:flex-end;
     }
 
     .footer-bar .btn{
@@ -470,14 +470,32 @@
     }
 
     .price-badge{
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
       font-size:12px;
       margin-left:6px;
-      padding:2px 6px;
-      border-radius:8px;
+      padding:4px 8px;
+      border-radius:999px;
       background:#eef4ff;
       border:1px solid #d9e5ff;
       white-space:nowrap;
+      font-weight:700;
+    }
+    .price-badge.price-below{
+      background:#d9eadf;
+      border-color:#bdd7c3;
+      color:#1f4f33;
+    }
+    .price-badge.price-average{
+      background:#f2e7c5;
+      border-color:#e5d39a;
+      color:#5c4b1f;
+    }
+    .price-badge.price-above{
+      background:#f2d6d6;
+      border-color:#e2b3b3;
+      color:#7a2d2d;
     }
 
     /* stacked mini-profile blocks */
@@ -593,34 +611,36 @@
       </table>
     </div>
     <div class="footer-bar" role="navigation" aria-label="Footer actions">
-      <div class="footer-tabs-row">
-        <button class="btn us"      data-gid="0">United States</button>
-        <button class="btn canada"         data-gid="918890863">Canada</button>
-        <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
-        <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
-        <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
-        <button class="btn mideast"        data-gid="1604960979">Middle East</button>
+      <div class="footer-content">
+        <div class="footer-tabs-row">
+          <button class="btn us"      data-gid="0">United States</button>
+          <button class="btn canada"         data-gid="918890863">Canada</button>
+          <button class="btn samerica"       data-gid="506975496">South America + Caribbean</button>
+          <button class="btn europe"         data-gid="1560092023">Europe + Nordic</button>
+          <button class="btn eastasia"       data-gid="1966795654">East Asia + Oceania + Australia</button>
+          <button class="btn mideast"        data-gid="1604960979">Middle East</button>
+        </div>
+        <button class="footer-toggle-btn" id="footerCollapseBtn" aria-label="Hide footer actions" title="Hide footer actions">▼</button>
+        <div class="footer-tabs-row actions-row">
+          <button class="btn download download-csv-btn">⬇️ Download CSV</button>
+          <a
+            class="btn submit"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
+            target="_blank"
+            rel="noopener"
+          >
+            Submit to list
+          </a>
+          <a
+            class="btn reddit"
+            href="https://www.reddit.com/r/FullToiletMistresses/"
+            target="_blank"
+            rel="noopener"
+          >
+            Reddit
+          </a>
+        </div>
       </div>
-      <div class="footer-tabs-row">
-        <button class="btn download download-csv-btn">⬇️ Download CSV</button>
-        <a
-          class="btn submit"
-          href="https://docs.google.com/forms/d/e/1FAIpQLSfbY17FJMkIvTPIjQZjXYT1MXEdWGb4bFCiB3A_Pq2Smpoq2Q/viewform?usp=header"
-          target="_blank"
-          rel="noopener"
-        >
-          Submit to list
-        </a>
-        <a
-          class="btn reddit"
-          href="https://www.reddit.com/r/FullToiletMistresses/"
-          target="_blank"
-          rel="noopener"
-        >
-          Reddit
-        </a>
-      </div>
-      <button class="footer-toggle-btn" id="footerCollapseBtn" aria-label="Hide footer actions" title="Hide footer actions">▼</button>
     </div>
 
     <button class="footer-expand-tab" id="footerExpandBtn" aria-label="Show footer actions" title="Show footer actions">▲</button>
@@ -1978,13 +1998,16 @@
           const cleaned = Number.isFinite(n) ? `$${Math.round(n)}` : (txtPrice || "").replace(/(?:high|mid|low|unknown|\?)/gi,'').trim() || "Unknown";
           const avg = render._tabAvg;
           let band = "—";
+          let bandClass = "";
           if (Number.isFinite(n) && Number.isFinite(avg)) {
             const diff = n - avg;
-            band = Math.abs(diff) <= 150 ? "average" : (diff > 150 ? "↑ above average" : "↓ below average");
+            const isAverage = Math.abs(diff) <= 150;
+            band = isAverage ? "average" : (diff > 150 ? "↑ above average" : "↓ below average");
+            bandClass = isAverage ? "price-average" : (diff > 150 ? "price-above" : "price-below");
           }
           const wrap = document.createElement("div");
           const main = document.createElement("span"); main.textContent = cleaned;
-          const badge = document.createElement("span"); badge.className = "price-badge"; badge.textContent = ` ${band}`;
+          const badge = document.createElement("span"); badge.className = `price-badge ${bandClass}`.trim(); badge.textContent = ` ${band}`;
           wrap.appendChild(main); wrap.appendChild(badge);
           td.appendChild(wrap);
           tr.appendChild(td);

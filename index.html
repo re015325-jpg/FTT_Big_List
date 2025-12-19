@@ -765,7 +765,7 @@
   let EMAIL_COL_IDX = 14; // email
   let P_COL_IDX = 15; // Reddit
   let Q_COL_IDX = 16; // phone
-  let SERVICES_COL_IDX = 17; // Services Provided
+  let SERVICES_COL_IDX = 17; // Kinks
   let CITY_COL_IDX = -1;
   let GENDER_COL_IDX = -1; // will be detected
   let SCAT_COL_IDX = -1;
@@ -801,7 +801,7 @@
   const COL_HEADERS = [
     "Location","Alternative Location","Domme","Images/Aliases","Website","Link tree/All links",
     "X/BlueSky","Verified?","Experience?","Price range?","Review/notes","Renown",
-    "Link to full review","Travels?","email","Reddit","phone","Services Provided","link"
+    "Link to full review","Travels?","email","Reddit","phone","Kinks","link"
   ];
 
   const SERVICE_KEYWORDS = [
@@ -1174,7 +1174,7 @@
       if (WIDE_IDX.includes(i)) w = 280;
       if (i === E_COL_IDX) w = 405;              // Links block
       if (i === EMAIL_COL_IDX) w = 320;          // Contact info
-      if (i === SERVICES_COL_IDX) w = 420;       // Services Provided wider
+      if (i === SERVICES_COL_IDX) w = 420;       // Kinks wider
 
       if (isHiddenColIndex(i)) w = 0;
 
@@ -2155,7 +2155,7 @@
           continue;
         }
 
-        /* Services Provided */
+        /* Kinks */
         if (c === SERVICES_COL_IDX && rIdx > 1) {
           buildServicesCell(td, txt);
           tr.appendChild(td);

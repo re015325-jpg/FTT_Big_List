@@ -643,6 +643,10 @@
         <input id="verifiedOnlyToggle" type="checkbox" />
         Verified only
       </label>
+      <label class="filter-toggle">
+        <input id="hideFlaggedToggle" type="checkbox" />
+        Hide flagged
+      </label>
       <button id="clearSearch" class="btn" style="background:#666">Clear</button>
 
       <label class="switch" title="Toggle row thumbnails">
@@ -653,6 +657,10 @@
       <button id="expandAll" class="btn" style="background:#3aa655">Expand all</button>
       <button id="collapseAll" class="btn" style="background:#b83d3d">Collapse all</button>
       <span class="linkish" id="resetSort">Reset sorting</span>
+      <label class="filter-toggle">
+        <input id="alphabetizeRegionsToggle" type="checkbox" />
+        A–Z regions
+      </label>
     </div>
 
     <div class="consent-bar">
@@ -824,8 +832,10 @@
   const collapseAllBtn = $("#collapseAll");
   const searchBox = $("#searchBox");
   const verifiedOnlyToggle = $("#verifiedOnlyToggle");
+  const hideFlaggedToggle = $("#hideFlaggedToggle");
   const clearSearchBtn = $("#clearSearch");
   const resetSortBtn = $("#resetSort");
+  const alphabetizeRegionsToggle = $("#alphabetizeRegionsToggle");
   const regionButtons = $$('button[data-gid]');
   const downloadCsvBtns = $$(".download-csv-btn");
   const scrollWrap = $("#scrollWrap");
@@ -838,8 +848,11 @@
   let sortSpec = null; // { colIdx, dir: 'asc'|'desc' }
   let lastQuery = "";
   let verifiedOnly = false;
+  let hideFlagged = false;
+  let sortLocationsAlpha = false;
   let imgCandCache = new Map();
   let rowTextIndex = new Map();
+  let rowGroupMap = new Map();
 
   /** ==== Concurrency limiter for images ==== */
   let inflight = 0;
@@ -1047,6 +1060,18 @@
     return (ai, bi) => {
       const a = (currentRows[ai] && currentRows[ai][colIdx] || "");
       const b = (currentRows[bi] && currentRows[bi][colIdx] || "");
+      if (colIdx === DOMME_COL_IDX){
+        const da = norm(stripHonorific(a));
+        const db = norm(stripHonorific(b));
+        if (!da && db) return 1;
+        if (!db && da) return -1;
+        if (da < db) return -1 * mul;
+        if (da > db) return  1 * mul;
+        const ra = norm(a), rb = norm(b);
+        if (ra < rb) return -1 * mul;
+        if (ra > rb) return  1 * mul;
+        return 0;
+      }
       if (colIdx === J_COL_IDX){
         const na = computePriceNumber(a), nb = computePriceNumber(b);
         const aValid = Number.isFinite(na), bValid = Number.isFinite(nb);
@@ -1607,8 +1632,26 @@
     return checkCols.some((idx)=> idx >= 0 && /scam/i.test((row[idx] || "")));
   }
 
+  function isRowRetired(idx){
+    const g = rowGroupMap.get(idx);
+    return !!(g && isRetiredGroup(g));
+  }
+
+  function stripHonorific(name){
+    if (!name) return "";
+    const words = name.trim().split(/\s+/);
+    if (words.length <= 1) return name.trim();
+    const first = words[0].toLowerCase();
+    const honorifics = ["mistress","goddess","dominatrix","domina","princess","miss","queen"];
+    if (honorifics.includes(first)) {
+      return words.slice(1).join(" ");
+    }
+    return name.trim();
+  }
+
   function render({ rows, colCount }){
     currentRows = rows; currentColCount = colCount;
+    rowGroupMap = new Map();
 
     updateDynamicIndices(rows);
 
@@ -1627,6 +1670,9 @@
     const groups = buildGroups(rows);
     const groupByHeaderIndex = new Map(groups.map(g => [g.headerIndex, g]));
     const sortedMemberLists = new Map();
+    const groupedMemberSet = new Set();
+    groups.forEach(g => g.members.forEach(m => groupedMemberSet.add(m)));
+    groups.forEach(g => g.members.forEach(m => rowGroupMap.set(m, g)));
 
     if (sortSpec && typeof sortSpec.colIdx === "number") {
       const cmp = comparator(sortSpec.colIdx, sortSpec.dir);
@@ -1635,6 +1681,10 @@
         sortedMemberLists.set(g.headerIndex, sorted);
       }
     }
+
+    const groupOrder = sortLocationsAlpha
+      ? [...groups].sort((a, b) => a.stateName.localeCompare(b.stateName, undefined, { sensitivity: "base" }))
+      : groups;
 
     function renderRowByIndex(rIdx){
       const row = rows[rIdx];
@@ -2146,14 +2196,16 @@
 
     render._tabAvg = _tabAvg;
 
+    const headerIdxSet = new Set(groups.map(g => g.headerIndex));
+
     for (let i=0; i<rows.length && i<ROW_CAP; i++){
-      const row = rows[i];
-      if (isOnlyColAText(row)) {
-        renderRowByIndex(i);
-      } else {
-        const inGroup = groups.find(g => g.members.includes(i));
-        if (!inGroup) renderDataRow(i, null);
-      }
+      if (headerIdxSet.has(i)) continue;
+      if (groupedMemberSet.has(i)) continue;
+      renderDataRow(i, null);
+    }
+
+    for (const g of groupOrder) {
+      renderRowByIndex(g.headerIndex);
     }
 
     rowTextIndex.clear();
@@ -2204,7 +2256,7 @@
   function applySearch(q, fromRender=false){
     lastQuery = (q || "").trim().toLowerCase();
     const hasQuery = !!lastQuery;
-    const isActive = hasQuery || verifiedOnly;
+    const isActive = hasQuery || verifiedOnly || hideFlagged;
 
     const headerRows = tbody.querySelectorAll("tr.state-header");
     const dataRows   = tbody.querySelectorAll('tr[data-row-index]');
@@ -2218,8 +2270,9 @@
         const idx = parseInt(tr.getAttribute("data-row-index"),10);
         const hay = rowTextIndex.get(idx) || "";
         const matchesQuery = !hasQuery || hay.includes(lastQuery);
-        const matchesVerified = !verifiedOnly || isRowVerified(idx);
-        const match = matchesQuery && matchesVerified;
+        const matchesVerified = !verifiedOnly || (isRowVerified(idx) && !isRowFlaggedScam(currentRows[idx] || []));
+        const matchesFlagged = !hideFlagged || (!isRowFlaggedScam(currentRows[idx] || []) && !isRowRetired(idx));
+        const match = matchesQuery && matchesVerified && matchesFlagged;
         tr.classList.toggle("search-row-hide", !match);
         if (match) shown++;
       });
@@ -2242,7 +2295,7 @@
   function isRowVerified(idx){
     const row = currentRows[idx] || [];
     const verifiedText = row[H_COL_IDX] || "";
-    return norm(verifiedText).includes("verified");
+    return norm(verifiedText).includes("verified") && !isRowFlaggedScam(row);
   }
 
   function saveScrollFor(gid, top){ try { localStorage.setItem(SCROLL_KEY_PREFIX + gid, String(top|0)); } catch {} }
@@ -2299,6 +2352,21 @@
       const prevTop = scrollWrap.scrollTop || 0;
       render({ rows: currentRows, colCount: currentColCount });
       scrollWrap.scrollTop = prevTop;
+    }
+  });
+
+  hideFlaggedToggle.addEventListener("change", ()=>{
+    hideFlagged = hideFlaggedToggle.checked;
+    applySearch(searchBox.value);
+  });
+
+  alphabetizeRegionsToggle.addEventListener("change", ()=>{
+    sortLocationsAlpha = alphabetizeRegionsToggle.checked;
+    if (currentRows.length) {
+      const prevTop = scrollWrap.scrollTop || 0;
+      render({ rows: currentRows, colCount: currentColCount });
+      scrollWrap.scrollTop = prevTop;
+      applySearch(searchBox.value, true);
     }
   });
 

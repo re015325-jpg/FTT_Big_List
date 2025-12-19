@@ -1642,7 +1642,7 @@
     const words = name.trim().split(/\s+/);
     if (words.length <= 1) return name.trim();
     const first = words[0].toLowerCase();
-    const honorifics = ["mistress","goddess","dominatrix","domina","princess","miss","queen"];
+    const honorifics = ["mistress","goddess","dominatrix","domina","princess","miss","queen", "Lady", "herrin"];
     if (honorifics.includes(first)) {
       return words.slice(1).join(" ");
     }

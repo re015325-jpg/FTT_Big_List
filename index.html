@@ -1168,6 +1168,10 @@
   }
 
   function loadCollapseStateMap(){ return loadCollapseState(GID); }
+  function isRetiredGroup(group){
+    if (!group || !group.stateNameLower) return false;
+    return group.stateNameLower.includes("retired");
+  }
   function buildGroups(rows){
     const state = loadCollapseStateMap();
     const groups = [];
@@ -1195,6 +1199,7 @@
 
     if (ALT_LOC_COL_IDX >= 0) {
       for (const g of groups) {
+        if (isRetiredGroup(g)) continue;
         const originalMembers = [...g.members];
         for (const rIdx of originalMembers) {
           const row = rows[rIdx] || [];
@@ -1734,6 +1739,7 @@
           const domme = row[DOMME_COL_IDX] || "";
           const alias = ALIAS_COL_IDX >= 0 ? (row[ALIAS_COL_IDX] || "") : "";
           const gender = GENDER_COL_IDX >= 0 ? (row[GENDER_COL_IDX] || "") : "";
+          const isRetired = isRetiredGroup(groupObj);
           const block = document.createElement("div");
           block.className = "stack-block";
           if (domme.trim()) {
@@ -1742,6 +1748,12 @@
             d.style.fontWeight = "700";
             d.style.color = "#000";
             block.appendChild(d);
+          }
+          if (isRetired) {
+            const retired = document.createElement("div");
+            retired.className = "stack-muted";
+            retired.textContent = "(Retired)";
+            block.appendChild(retired);
           }
           if (alias.trim()) {
             const a = document.createElement("div");

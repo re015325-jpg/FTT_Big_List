@@ -1469,7 +1469,7 @@
       else if (label === "email") EMAIL_COL_IDX = i;
       else if (label === "reddit") P_COL_IDX = i;
       else if (label === "phone") Q_COL_IDX = i;
-      else if (label === "services provided") SERVICES_COL_IDX = i;
+      else if (label === "services provided" || label === "kinks") SERVICES_COL_IDX = i;
       else if (label === "city") CITY_COL_IDX = i;
       else if (label === "gender") GENDER_COL_IDX = i;
       else if (label === "scat link") SCAT_COL_IDX = i;
@@ -1778,18 +1778,19 @@
           }
 
           const label = (txt || "").trim();
-          if (SORTABLE_HEADERS.has(label)) {
-            const colLetter = SORTABLE_HEADERS.get(label);
+          const displayLabel = label.toLowerCase() === "services provided" ? "Kinks" : label;
+          if (SORTABLE_HEADERS.has(displayLabel)) {
+            const colLetter = SORTABLE_HEADERS.get(displayLabel);
             const span = document.createElement("span");
             span.className = `hdr-sort ${caretClassFor(colLetter)}`;
             span.title = "Click to sort within each state";
             const caret = document.createElement("span"); caret.className = "sort-caret";
-            span.textContent = label + " "; span.appendChild(caret);
+            span.textContent = displayLabel + " "; span.appendChild(caret);
             span.addEventListener("click", ()=> setSortBy(colLetter));
             td.appendChild(span); tr.appendChild(td); continue;
           }
 
-          td.textContent = txt;
+          td.textContent = displayLabel;
           tr.appendChild(td);
           continue;
         }

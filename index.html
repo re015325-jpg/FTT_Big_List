@@ -1406,6 +1406,7 @@
   }
 
   function buildImageCell(tdImg, row, rIdx){
+    if (rIdx <= 1) return;
     if (!imgToggle.checked) return;
     if (tdImg._imgReady) return;
     registerRowImageCell(rIdx, tdImg);

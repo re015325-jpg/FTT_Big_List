@@ -1043,6 +1043,14 @@
     }
     const seen = new Set(); return out.filter(u => { if (seen.has(u)) return false; seen.add(u); return true; });
   }
+  function primeImageCandidates(rows){
+    imgCandCache.clear();
+    for (let i=0; i<rows.length && i<ROW_CAP; i++){
+      const row = rows[i];
+      if (isOnlyColAText(row)) continue;
+      imgCandCache.set(i, imageCandidates(row));
+    }
+  }
   function proxify(url){
     try { const noScheme = url.replace(/^https?:\/\//i,""); return `https://images.weserv.nl/?url=${encodeURIComponent(noScheme)}&w=${THUMB_PX}&h=${THUMB_PX}&fit=cover&q=70`; }
     catch { return url; }
@@ -1397,8 +1405,10 @@
     if (tdImg._imgReady) return;
     tdImg._imgReady = true;
 
-    const cands = imgCandCache.get(rIdx) || imageCandidates(row);
-    imgCandCache.set(rIdx, cands);
+    if (!imgCandCache.has(rIdx)) {
+      imgCandCache.set(rIdx, imageCandidates(row));
+    }
+    const cands = imgCandCache.get(rIdx) || [];
     if (!cands.length) return;
 
     const sk  = document.createElement("div"); sk.className = "skeleton";
@@ -1528,7 +1538,12 @@
       try {
         const u = new URL(m[1]);
         host = (u.hostname || "").replace(/^www\./i,"");
-        first = (u.pathname.split('/').filter(Boolean)[0] || "").replace(/^@/,"");
+        const parts = u.pathname.split('/').filter(Boolean);
+        first = (parts[0] || "").replace(/^@/,"");
+        if (/tryst\.link/i.test(host)) {
+          const last = (parts[parts.length - 1] || "").replace(/^@/,"");
+          if (last) return `Tryst: @${last}`;
+        }
       } catch {}
     }
     if (/linktr\.ee/i.test(host)) return `Link Tree: ${first || pretty}`;
@@ -1557,7 +1572,7 @@
       } catch {}
       if (bskyHandle) bskyHandle = bskyHandle.replace(/\.bsky\.social$/i, "");
       const disp = bskyHandle ? `@${bskyHandle.replace(/^@/, "")}` : (handle ? `@${handle.replace(/^@/, "")}` : prettyUrlText(raw));
-      return `bsky: ${disp}`;
+      return `Bsky: ${disp}`;
     }
     const disp = handle ? `@${handle.replace(/^@/,"")}` : prettyUrlText(raw);
     return `Social: ${disp}`;
@@ -1664,7 +1679,8 @@
     }
     const _tabAvg = _cnt ? (_sum / _cnt) : NaN;
 
-    imgCandCache.clear(); buildColgroup(); tbody.innerHTML = "";
+    primeImageCandidates(rows);
+    buildColgroup(); tbody.innerHTML = "";
     document.body.classList.toggle("hide-images", !imgToggle.checked);
 
     const groups = buildGroups(rows);

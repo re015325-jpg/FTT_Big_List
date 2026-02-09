@@ -2024,34 +2024,52 @@
             block.appendChild(line);
           }
 
-            if (isMeaningfulLinkText(website)) {
-              const url = firstUrl(website) || website.trim();
+          function splitCapsuleLinks(raw){
+            if (!raw) return [];
+            return String(raw)
+              .split(/,\s+(?=https?:\/\/)/i)
+              .map(part => part.trim())
+              .filter(Boolean);
+          }
+
+          if (isMeaningfulLinkText(website)) {
+            splitCapsuleLinks(website).forEach(part => {
+              const url = firstUrl(part) || part.trim();
               addPill(prettyUrlText(url), url, "red");
-            }
+            });
+          }
 
           if (isMeaningfulLinkText(links)) {
-            const url = firstUrl(links) || links.trim();
-            addPill(formatLinksDisplay(links), url, "green");
+            splitCapsuleLinks(links).forEach(part => {
+              const url = firstUrl(part) || part.trim();
+              addPill(formatLinksDisplay(part), url, "green");
+            });
           }
 
           if (isMeaningfulLinkText(social)) {
-            const url = firstUrl(social) || social.trim();
-            addPill(formatSocialDisplay(social), url, "blue");
+            splitCapsuleLinks(social).forEach(part => {
+              const url = firstUrl(part) || part.trim();
+              addPill(formatSocialDisplay(part), url, "blue");
+            });
           }
 
-            if (isMeaningfulLinkText(scat)) {
-              const url = firstUrl(scat) || scat.trim();
-              const scatFmt = formatScatDisplay(scat);
+          if (isMeaningfulLinkText(scat)) {
+            splitCapsuleLinks(scat).forEach(part => {
+              const url = firstUrl(part) || part.trim();
+              const scatFmt = formatScatDisplay(part);
               if (scatFmt.dropLabel) {
                 addPill(scatFmt.text, url, "brown");
               } else {
                 addPill(`Scat link: ${scatFmt.text}`, url, "brown");
               }
-            }
-            if (isMeaningfulLinkText(fet)) {
-              const url = firstUrl(fet) || fet.trim();
+            });
+          }
+          if (isMeaningfulLinkText(fet)) {
+            splitCapsuleLinks(fet).forEach(part => {
+              const url = firstUrl(part) || part.trim();
               addPill(prettyUrlText(url), url, "dark-red");
-            }
+            });
+          }
 
           td.appendChild(block);
           tr.appendChild(td);
@@ -2369,6 +2387,15 @@
 
       meta.textContent = meta.textContent.replace(/• matches: \d+/, "");
       meta.textContent += ` • matches: ${shown}`;
+      if (imgToggle.checked) {
+        dataRows.forEach(tr=>{
+          if (tr.classList.contains("search-row-hide")) return;
+          const idx = parseInt(tr.getAttribute("data-row-index"),10);
+          const row = currentRows[idx];
+          const tdImg = tr.querySelector("td.imgCol");
+          if (tdImg && row) buildImageCell(tdImg, row, idx);
+        });
+      }
     } else {
       tbody.querySelectorAll("tr").forEach(tr => tr.classList.remove("search-row-hide"));
       if (!fromRender && currentRows.length) render({ rows: currentRows, colCount: currentColCount });

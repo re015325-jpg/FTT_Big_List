@@ -883,6 +883,7 @@
   const URL_RE = /(https?:\/\/[^\s)'"<>]+)/i;
   const IMG_EXT_RE   = /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i;
   const IMG_HOST_HINT= /(twimg\.com|fbcdn\.net|cdn|images|media|imgur|ggpht\.com|pinimg\.com)/i;
+  const FALLBACK_THUMB_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Australian_Toilet.JPG/500px-Australian_Toilet.JPG";
   function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
   function csvEscape(v){ const s=(v??"").toString().replace(/\r?\n/g," ").trim(); return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s; }
   function downloadCSV(filename, rows){
@@ -1419,7 +1420,7 @@
       imgCandCache.set(rIdx, imageCandidates(row));
     }
     const cands = imgCandCache.get(rIdx) || [];
-    if (!cands.length) return;
+    if (!cands.includes(FALLBACK_THUMB_URL)) cands.push(FALLBACK_THUMB_URL);
     tdImg._imgReady = true;
 
     const sk  = document.createElement("div"); sk.className = "skeleton";
@@ -1567,6 +1568,12 @@
         const parts = (u.pathname || "").split('/').filter(Boolean);
         const handle = (parts[parts.length - 1] || "").replace(/^@/,"");
         if (handle) return `Tryst: @${handle}`;
+      }
+      if (host === "fetlife.com") {
+        const parts = (u.pathname || "").split('/').filter(Boolean);
+        const first = (parts[0] || "").toLowerCase();
+        if (first === "users") return "Fetlife";
+        if (parts.length === 1 && parts[0]) return `Fetlife: @${parts[0].replace(/^@/,"")}`;
       }
     } catch {}
     return "";
@@ -2026,10 +2033,18 @@
 
           function splitCapsuleLinks(raw){
             if (!raw) return [];
+            const seen = new Set();
             return String(raw)
               .split(/,\s+(?=https?:\/\/)/i)
               .map(part => part.trim())
-              .filter(Boolean);
+              .filter(Boolean)
+              .filter(part => {
+                const normalized = (firstUrl(part) || part).trim().toLowerCase();
+                if (!normalized) return false;
+                if (seen.has(normalized)) return false;
+                seen.add(normalized);
+                return true;
+              });
           }
 
           if (isMeaningfulLinkText(website)) {

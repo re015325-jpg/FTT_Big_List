@@ -851,6 +851,8 @@
   let hideFlagged = false;
   let sortLocationsAlpha = false;
   let imgCandCache = new Map();
+  let rowImageCells = new Map();
+  let rowImgSrcCache = new Map();
   let rowTextIndex = new Map();
   let rowGroupMap = new Map();
 
@@ -904,6 +906,8 @@
     return nums.reduce((a,b)=>a+b,0) / nums.length;
   }
   function prettyUrlText(url){
+    const specialLabel = formatSpecialLinkLabel(url);
+    if (specialLabel) return specialLabel;
     const fallback = (s) => String(s)
       .replace(/^https?:\/\//i,'')
       .replace(/^www\./i,'')
@@ -1403,13 +1407,20 @@
   function buildImageCell(tdImg, row, rIdx){
     if (!imgToggle.checked) return;
     if (tdImg._imgReady) return;
-    tdImg._imgReady = true;
+    registerRowImageCell(rIdx, tdImg);
+    const cachedRaw = rowImgSrcCache.get(rIdx) || cacheGetGoodSrc(row);
+    if (cachedRaw) {
+      tdImg._imgReady = true;
+      ensureImageFromRaw(tdImg, row, cachedRaw);
+      return;
+    }
 
     if (!imgCandCache.has(rIdx)) {
       imgCandCache.set(rIdx, imageCandidates(row));
     }
     const cands = imgCandCache.get(rIdx) || [];
     if (!cands.length) return;
+    tdImg._imgReady = true;
 
     const sk  = document.createElement("div"); sk.className = "skeleton";
     const img = document.createElement("img"); img.className = "thumb"; img.loading="lazy"; img.decoding="async";
@@ -1427,7 +1438,10 @@
     img.onload  = () => {
       clearTimer();
       if ((img.naturalWidth||0) < 48 || (img.naturalHeight||0) < 48) { tryNext(); return; }
-      cacheSetGoodSrc(row, img._rawSrc || ""); sk.remove(); doneOne();
+      cacheSetGoodSrc(row, img._rawSrc || "");
+      applyCachedImageToRowCells(rIdx, row, img._rawSrc || "");
+      sk.remove();
+      doneOne();
     };
 
     const starter = ()=>{ tryNext(); }; img._startLoading = starter; lazyImgObserver.observe(img);
@@ -1440,6 +1454,44 @@
     } else {
       tdImg.appendChild(sk); tdImg.appendChild(img);
     }
+  }
+
+  function registerRowImageCell(rIdx, tdImg){
+    if (!rowImageCells.has(rIdx)) rowImageCells.set(rIdx, new Set());
+    rowImageCells.get(rIdx).add(tdImg);
+  }
+
+  function ensureImageFromRaw(tdImg, row, rawSrc){
+    if (!rawSrc) return;
+    const existing = tdImg.querySelector("img.thumb");
+    if (existing && existing.dataset.rawSrc === rawSrc && existing.complete && existing.naturalWidth > 0) return;
+    tdImg.textContent = "";
+    const sk  = document.createElement("div"); sk.className = "skeleton";
+    const img = document.createElement("img"); img.className = "thumb"; img.loading="lazy"; img.decoding="async";
+    img.dataset.rawSrc = rawSrc;
+    img.src = proxify(rawSrc);
+    img.onload = () => { sk.remove(); };
+    img.onerror = () => { sk.remove(); };
+    const landing = preferredLandingUrl(row);
+    if (landing) {
+      const a = document.createElement("a");
+      a.href = landing; a.target = "_blank"; a.rel = "noopener"; a.title = "Open link";
+      a.appendChild(sk); a.appendChild(img); tdImg.appendChild(a);
+    } else {
+      tdImg.appendChild(sk); tdImg.appendChild(img);
+    }
+  }
+
+  function applyCachedImageToRowCells(rIdx, row, rawSrc){
+    if (!rawSrc) return;
+    rowImgSrcCache.set(rIdx, rawSrc);
+    const cells = rowImageCells.get(rIdx);
+    if (!cells) return;
+    cells.forEach(cell => {
+      if (!cell.querySelector("img.thumb") || cell.textContent === "") {
+        ensureImageFromRaw(cell, row, rawSrc);
+      }
+    });
   }
 
   function setSortBy(colLetter){
@@ -1498,6 +1550,28 @@
     return null;
   }
 
+  function formatSpecialLinkLabel(raw){
+    const match = raw && raw.match(URL_RE);
+    if (!match) return "";
+    try {
+      const u = new URL(match[1]);
+      const host = (u.hostname || "").replace(/^www\./i,"").toLowerCase();
+      if (host === "bsky.app" || host.endsWith(".bsky.app")) {
+        const m = (u.pathname || "").match(/\/profile\/([^/]+)/i);
+        if (m) {
+          const handle = m[1].replace(/\.bsky\.social$/i, "").replace(/^@/,"");
+          if (handle) return `Bsky: @${handle}`;
+        }
+      }
+      if (host === "tryst.link") {
+        const parts = (u.pathname || "").split('/').filter(Boolean);
+        const handle = (parts[parts.length - 1] || "").replace(/^@/,"");
+        if (handle) return `Tryst: @${handle}`;
+      }
+    } catch {}
+    return "";
+  }
+
   function isMeaningfulLinkText(text){
     const t = norm(text);
     return !!t && t !== "none" && t !== "n/a";
@@ -1531,6 +1605,8 @@
   }
 
   function formatLinksDisplay(raw){
+    const special = formatSpecialLinkLabel(raw);
+    if (special) return special;
     const pretty = prettyUrlText(raw);
     const m = raw && raw.match(URL_RE);
     let host = ""; let first = "";
@@ -1560,18 +1636,9 @@
       return `X: ${disp}`;
     }
     if (kind === "bluesky") {
-      let bskyHandle = "";
-      try {
-        const urlMatch = raw && raw.match(URL_RE);
-        if (urlMatch) {
-          const u = new URL(urlMatch[1]);
-          const path = u.pathname || "";
-          const m = path.match(/\/profile\/([^/]+)/i);
-          if (m) bskyHandle = m[1];
-        }
-      } catch {}
-      if (bskyHandle) bskyHandle = bskyHandle.replace(/\.bsky\.social$/i, "");
-      const disp = bskyHandle ? `@${bskyHandle.replace(/^@/, "")}` : (handle ? `@${handle.replace(/^@/, "")}` : prettyUrlText(raw));
+      const special = formatSpecialLinkLabel(raw);
+      if (special) return special;
+      const disp = handle ? `@${handle.replace(/^@/, "")}` : prettyUrlText(raw);
       return `Bsky: ${disp}`;
     }
     const disp = handle ? `@${handle.replace(/^@/,"")}` : prettyUrlText(raw);
@@ -1667,6 +1734,8 @@
   function render({ rows, colCount }){
     currentRows = rows; currentColCount = colCount;
     rowGroupMap = new Map();
+    rowImageCells = new Map();
+    rowImgSrcCache = new Map();
 
     updateDynamicIndices(rows);
 
